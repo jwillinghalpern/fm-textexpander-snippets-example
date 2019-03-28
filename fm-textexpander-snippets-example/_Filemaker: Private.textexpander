@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>groupInfo</key>
+	<dict>
+		<key>expandAfterMode</key>
+		<integer>0</integer>
+		<key>groupName</key>
+		<string>_Filemaker: Private</string>
+	</dict>
+	<key>snippetsTE2</key>
+	<array>
+		<dict>
+			<key>abbreviation</key>
+			<string>_fmpastedefault</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:34:12Z</date>
+			<key>label</key>
+			<string>_FM Paste Default</string>
+			<key>modificationDate</key>
+			<date>2018-12-28T09:53:10Z</date>
+			<key>plainText</key>
+			<string>-- Convert clipboard xml to filemaker object
+%snippet:_fmtoobj%
+-- Paste clipboardtell application "System Events" to keystroke "v" using command down-- Return empty string""</string>
+			<key>snippetType</key>
+			<integer>0</integer>
+			<key>uuidString</key>
+			<string>A8504476-9E80-4BC3-83CA-99D2896C5FC7</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>_fmpastescriptsteps</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:34:12Z</date>
+			<key>label</key>
+			<string>_Paste Script Steps</string>
+			<key>modificationDate</key>
+			<date>2018-12-28T09:53:35Z</date>
+			<key>plainText</key>
+			<string>-- Convert clipboard xml to filemaker object
+%snippet:_fmtoobj%
+
+-- Press escape to get out of Filemaker's autocompletetell application "System Events"	key code 53
+	key code 53end tell
+
+-- delay 0.1-- Paste clipboardtell application "System Events" to keystroke "v" using command down-- Return empty string""</string>
+			<key>snippetType</key>
+			<integer>0</integer>
+			<key>uuidString</key>
+			<string>524AD8A9-3C85-4C6A-B670-4448B4F98796</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>_fmtoobj</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T07:57:44Z</date>
+			<key>label</key>
+			<string>_XML To fmObject</string>
+			<key>modificationDate</key>
+			<date>2019-01-05T23:11:43Z</date>
+			<key>plainText</key>
+			<string>-- Convert clipboard xml to filemaker objectset p to "%snippet:fmClipToolsScriptsFolder%/fmClip - Clipboard XML to FM Objects.applescript"set a to POSIX file prun script file a
+
+-- Return empty string
+""</string>
+			<key>snippetType</key>
+			<integer>0</integer>
+			<key>uuidString</key>
+			<string>C864EE62-6091-4127-AA14-310E979D130C</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>_fmtoxml</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T07:57:21Z</date>
+			<key>label</key>
+			<string>_fmObject To XML</string>
+			<key>modificationDate</key>
+			<date>2019-01-05T23:47:42Z</date>
+			<key>plainText</key>
+			<string>-- Convert clipboard xml to filemaker object
+set p to "%snippet:fmClipToolsScriptsFolder%/fmClip - Clipboard FM Objects to XML.applescript"
+
+set a to POSIX file prun script file a
+
+-- Return empty string
+""</string>
+			<key>snippetType</key>
+			<integer>0</integer>
+			<key>uuidString</key>
+			<string>810994DC-B05C-4AC0-B8D2-9DA2A427C8FE</string>
+		</dict>
+	</array>
+</dict>
+</plist>

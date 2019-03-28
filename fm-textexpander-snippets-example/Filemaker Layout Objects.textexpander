@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>groupInfo</key>
+	<dict>
+		<key>expandAfterMode</key>
+		<integer>0</integer>
+		<key>groupName</key>
+		<string>Filemaker Layout Objects</string>
+	</dict>
+	<key>snippetsTE2</key>
+	<array>
+		<dict>
+			<key>abbreviation</key>
+			<string>lofooter</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>Layout Object footer</string>
+			<key>modificationDate</key>
+			<date>2019-01-05T22:07:04Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;
+&lt;fmxmlsnippet type=\"LayoutObjectList\"&gt;
+&lt;Layout enclosingRectTop =\"621.0000000\" enclosingRectLeft =\"14.0000000\" enclosingRectBottom =\"635.0000000\" enclosingRectRight =\"631.0000000\"&gt;
+&lt;Object type=\"Text\" key=\"239\" LabelKey=\"0\" flags=\"0\" rotation=\"0\"&gt;
+&lt;Bounds top=\"621.0000000\" left=\"14.0000000\" bottom=\"635.0000000\" right=\"631.0000000\"/&gt;
+&lt;TextObj flags=\"10\"&gt;
+&lt;ExtendedAttributes fontHeight=\"10\" graphicFormat=\"0\"&gt;
+&lt;NumFormat flags=\"2304\" charStyle=\"0\" negativeStyle=\"0\" currencySymbol=\"$\" thousandsSep=\"44\" decimalPoint=\"46\" negativeColor=\"#DD000000\" decimalDigits=\"2\" trueString=\"Yes\" falseString=\"No\"/&gt;
+&lt;DateFormat format=\"0\" charStyle=\"0\" monthStyle=\"0\" dayStyle=\"0\" separator=\"47\"&gt;
+&lt;DateElement&gt;3&lt;/DateElement&gt;
+&lt;DateElement&gt;6&lt;/DateElement&gt;
+&lt;DateElement&gt;1&lt;/DateElement&gt;
+&lt;DateElement&gt;8&lt;/DateElement&gt;
+&lt;DateElementSep index=\"0\"&gt;&lt;/DateElementSep&gt;
+&lt;DateElementSep index=\"1\"&gt;, &lt;/DateElementSep&gt;
+&lt;DateElementSep index=\"2\"&gt; &lt;/DateElementSep&gt;
+&lt;DateElementSep index=\"3\"&gt;, &lt;/DateElementSep&gt;
+&lt;DateElementSep index=\"4\"&gt;&lt;/DateElementSep&gt;
+&lt;/DateFormat&gt;
+&lt;TimeFormat flags=\"143\" charStyle=\"0\" hourStyle=\"0\" minsecStyle=\"1\" separator=\"58\" amString=\" AM\" pmString=\" PM\" ampmString=\"\"/&gt;
+&lt;CharacterStyle mask=\"32695\"&gt;
+&lt;Font-family codeSet=\"Roman\" fontId=\"2\" postScript=\"ArialMT,sans-serif\"&gt;arial,sans-serif&lt;/Font-family&gt;
+&lt;Font-size&gt;10&lt;/Font-size&gt;
+&lt;Face&gt;0&lt;/Face&gt;
+&lt;Color&gt;#000000&lt;/Color&gt;
+&lt;/CharacterStyle&gt;
+&lt;/ExtendedAttributes&gt;
+&lt;Styles&gt;
+&lt;LocalCSS&gt;
+self:normal .self&amp;#10;{&amp;#10;&amp;#09;font-size: 10pt;&amp;#10;&amp;#09;color: rgba(0%,0%,0%,1);&amp;#10;}&amp;#10;&lt;/LocalCSS&gt;
+&lt;FullCSS&gt;
+self:normal .self&amp;#10;{&amp;#10;&amp;#09;background-image: none;&amp;#10;&amp;#09;background-position: 0% 0%;&amp;#10;&amp;#09;background-size: auto;&amp;#10;&amp;#09;background-repeat: repeat repeat;&amp;#10;&amp;#09;background-origin: padding-box;&amp;#10;&amp;#09;background-clip: border-box;&amp;#10;&amp;#09;background-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-top-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-right-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-bottom-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-left-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-top-style: none;&amp;#10;&amp;#09;border-right-style: none;&amp;#10;&amp;#09;border-bottom-style: none;&amp;#10;&amp;#09;border-left-style: none;&amp;#10;&amp;#09;border-top-width: 0pt;&amp;#10;&amp;#09;border-right-width: 0pt;&amp;#10;&amp;#09;border-bottom-width: 0pt;&amp;#10;&amp;#09;border-left-width: 0pt;&amp;#10;&amp;#09;border-top-right-radius: 0pt 0pt;&amp;#10;&amp;#09;border-bottom-right-radius: 0pt 0pt;&amp;#10;&amp;#09;border-bottom-left-radius: 0pt 0pt;&amp;#10;&amp;#09;border-top-left-radius: 0pt 0pt;&amp;#10;&amp;#09;border-image-source: none;&amp;#10;&amp;#09;border-image-slice: 100% 100% 100% 100% fill;&amp;#10;&amp;#09;border-image-width: 1 1 1 1;&amp;#10;&amp;#09;border-image-outset: 0 0 0 0;&amp;#10;&amp;#09;border-image-repeat: stretch stretch;&amp;#10;&amp;#09;outline-width: 0pt;&amp;#10;&amp;#09;outline-style: none;&amp;#10;&amp;#09;outline-color: invert;&amp;#10;&amp;#09;outline-offset: 0pt;&amp;#10;&amp;#09;font-family: -fm-font-family(arial,sans-serif,ArialMT;sans-serif);&amp;#10;&amp;#09;font-weight: normal;&amp;#10;&amp;#09;font-stretch: normal;&amp;#10;&amp;#09;font-style: normal;&amp;#10;&amp;#09;font-variant: normal;&amp;#10;&amp;#09;font-size: 10pt;&amp;#10;&amp;#09;color: rgba(0%,0%,0%,1);&amp;#10;&amp;#09;direction: ltr;&amp;#10;&amp;#09;line-height: 1line;&amp;#10;&amp;#09;block-progression: tb;&amp;#10;&amp;#09;text-align: left;&amp;#10;&amp;#09;text-transform: none;&amp;#10;&amp;#09;text-indent: 0pt;&amp;#10;&amp;#09;box-shadow: none;&amp;#10;&amp;#09;box-sizing: content-box;&amp;#10;&amp;#09;vertical-align: baseline;&amp;#10;&amp;#09;-fm-digit-set: roman;&amp;#10;&amp;#09;-fm-space-before: 0line;&amp;#10;&amp;#09;-fm-space-after: 0line;&amp;#10;&amp;#09;-fm-tab-stops: ;&amp;#10;&amp;#09;-fm-strikethrough: false;&amp;#10;&amp;#09;-fm-underline: none;&amp;#10;&amp;#09;-fm-glyph-variant: ;&amp;#10;&amp;#09;-fm-paragraph-margin-left: 0pt;&amp;#10;&amp;#09;-fm-paragraph-margin-right: 0pt;&amp;#10;&amp;#09;-fm-character-direction: ;&amp;#10;&amp;#09;-fm-use-default-appearance: false;&amp;#10;&amp;#09;-fm-override-with-classic: false;&amp;#10;&amp;#09;-fm-baseline-shift: 0pt;&amp;#10;&amp;#09;-fm-fill-effect: 0;&amp;#10;&amp;#09;-fm-highlight-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;-fm-text-vertical-align: top;&amp;#10;&amp;#09;-fm-tategaki: false;&amp;#10;&amp;#09;-fm-rotation: 0;&amp;#10;&amp;#09;-fm-borders-between-reps: false;&amp;#10;&amp;#09;-fm-borders-baseline: false;&amp;#10;&amp;#09;-fm-texty-field: false;&amp;#10;&amp;#09;-fm-box-shadow-persist: none;&amp;#10;}&amp;#10;self:normal .inner_border&amp;#10;{&amp;#10;&amp;#09;border-top-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-right-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-bottom-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-left-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-top-style: none;&amp;#10;&amp;#09;border-right-style: none;&amp;#10;&amp;#09;border-bottom-style: none;&amp;#10;&amp;#09;border-left-style: none;&amp;#10;&amp;#09;border-top-width: 0pt;&amp;#10;&amp;#09;border-right-width: 0pt;&amp;#10;&amp;#09;border-bottom-width: 0pt;&amp;#10;&amp;#09;border-left-width: 0pt;&amp;#10;&amp;#09;border-top-right-radius: 0pt 0pt;&amp;#10;&amp;#09;border-bottom-right-radius: 0pt 0pt;&amp;#10;&amp;#09;border-bottom-left-radius: 0pt 0pt;&amp;#10;&amp;#09;border-top-left-radius: 0pt 0pt;&amp;#10;&amp;#09;padding-top: 0pt;&amp;#10;&amp;#09;padding-right: 0pt;&amp;#10;&amp;#09;padding-bottom: 0pt;&amp;#10;&amp;#09;padding-left: 0pt;&amp;#10;&amp;#09;margin-top: 0pt;&amp;#10;&amp;#09;margin-right: 0pt;&amp;#10;&amp;#09;margin-bottom: 0pt;&amp;#10;&amp;#09;margin-left: 0pt;&amp;#10;&amp;#09;width: auto;&amp;#10;&amp;#09;height: auto;&amp;#10;&amp;#09;top: auto;&amp;#10;&amp;#09;right: auto;&amp;#10;&amp;#09;bottom: auto;&amp;#10;&amp;#09;left: auto;&amp;#10;&amp;#09;position: static;&amp;#10;&amp;#09;box-shadow: none;&amp;#10;&amp;#09;box-sizing: content-box;&amp;#10;}&amp;#10;self:normal .text&amp;#10;{&amp;#10;&amp;#09;padding-top: 0pt;&amp;#10;&amp;#09;padding-right: 0pt;&amp;#10;&amp;#09;padding-bottom: 0pt;&amp;#10;&amp;#09;padding-left: 0pt;&amp;#10;&amp;#09;margin-top: 0pt;&amp;#10;&amp;#09;margin-right: 0pt;&amp;#10;&amp;#09;margin-bottom: 0pt;&amp;#10;&amp;#09;margin-left: 0pt;&amp;#10;&amp;#09;height: 100%;&amp;#10;&amp;#09;box-sizing: border-box;&amp;#10;}&amp;#10;self:normal .baseline&amp;#10;{&amp;#10;&amp;#09;border-top-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-right-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-bottom-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-left-color: rgba(0%,0%,0%,0);&amp;#10;&amp;#09;border-top-style: none;&amp;#10;&amp;#09;border-right-style: none;&amp;#10;&amp;#09;border-bottom-style: none;&amp;#10;&amp;#09;border-left-style: none;&amp;#10;&amp;#09;border-top-width: 0pt;&amp;#10;&amp;#09;border-right-width: 0pt;&amp;#10;&amp;#09;border-bottom-width: 0pt;&amp;#10;&amp;#09;border-left-width: 0pt;&amp;#10;}&amp;#10;&lt;/FullCSS&gt;
+&lt;ThemeName&gt;com.filemaker.theme.custom.9D08A950_2022_4EAC_B66B_57E019D93211&lt;/ThemeName&gt;&lt;/Styles&gt;
+&lt;CharacterStyleVector&gt;
+&lt;Style&gt;
+&lt;Data&gt;Created:&lt;/Data&gt;
+&lt;CharacterStyle mask=\"17\"&gt;
+&lt;Font-family codeSet=\"Roman\" fontId=\"3\" postScript=\"Arial-BoldMT\"&gt;Arial&lt;/Font-family&gt;
+&lt;Font-size&gt;12&lt;/Font-size&gt;
+&lt;Face&gt;256&lt;/Face&gt;
+&lt;Color&gt;#000000&lt;/Color&gt;
+&lt;/CharacterStyle&gt;
+&lt;/Style&gt;
+&lt;Style&gt;
+&lt;Data&gt; &amp;lt;&amp;lt;creationTimestamp&amp;gt;&amp;gt; by &amp;lt;&amp;lt;creationAccount&amp;gt;&amp;gt;    &lt;/Data&gt;
+&lt;CharacterStyle mask=\"0\"&gt;
+&lt;Font-family codeSet=\"Roman\" fontId=\"0\" postScript=\"ArialMT\"&gt;Arial&lt;/Font-family&gt;
+&lt;Font-size&gt;12&lt;/Font-size&gt;
+&lt;Face&gt;0&lt;/Face&gt;
+&lt;Color&gt;#000000&lt;/Color&gt;
+&lt;/CharacterStyle&gt;
+&lt;/Style&gt;
+&lt;Style&gt;
+&lt;Data&gt;Modified:&lt;/Data&gt;
+&lt;CharacterStyle mask=\"17\"&gt;
+&lt;Font-family codeSet=\"Roman\" fontId=\"3\" postScript=\"Arial-BoldMT\"&gt;Arial&lt;/Font-family&gt;
+&lt;Font-size&gt;12&lt;/Font-size&gt;
+&lt;Face&gt;256&lt;/Face&gt;
+&lt;Color&gt;#000000&lt;/Color&gt;
+&lt;/CharacterStyle&gt;
+&lt;/Style&gt;
+&lt;Style&gt;
+&lt;Data&gt; &amp;lt;&amp;lt;modificationTimestamp&amp;gt;&amp;gt; by &amp;lt;&amp;lt;modificationAccount&amp;gt;&amp;gt;&lt;/Data&gt;
+&lt;CharacterStyle mask=\"0\"&gt;
+&lt;Font-family codeSet=\"Roman\" fontId=\"0\" postScript=\"ArialMT\"&gt;Arial&lt;/Font-family&gt;
+&lt;Font-size&gt;12&lt;/Font-size&gt;
+&lt;Face&gt;0&lt;/Face&gt;
+&lt;Color&gt;#000000&lt;/Color&gt;
+&lt;/CharacterStyle&gt;
+&lt;/Style&gt;
+&lt;/CharacterStyleVector&gt;
+&lt;ParagraphStyleVector&gt;
+&lt;Style&gt;
+&lt;Data&gt;Created: &amp;lt;&amp;lt;creationTimestamp&amp;gt;&amp;gt; by &amp;lt;&amp;lt;creationAccount&amp;gt;&amp;gt;    Modified: &amp;lt;&amp;lt;modificationTimestamp&amp;gt;&amp;gt; by &amp;lt;&amp;lt;modificationAccount&amp;gt;&amp;gt;&lt;/Data&gt;
+&lt;ParagraphStyle mask=\"0\"&gt;
+&lt;/ParagraphStyle&gt;
+&lt;/Style&gt;
+&lt;/ParagraphStyleVector&gt;
+&lt;/TextObj&gt;
+&lt;/Object&gt;
+&lt;/Layout&gt;&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastescriptsteps%</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>5737C25B-FD17-4517-8041-4310DC587874</string>
+		</dict>
+	</array>
+</dict>
+</plist>

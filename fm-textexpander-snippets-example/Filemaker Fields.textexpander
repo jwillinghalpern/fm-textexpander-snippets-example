@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>groupInfo</key>
+	<dict>
+		<key>expandAfterMode</key>
+		<integer>0</integer>
+		<key>groupName</key>
+		<string>Filemaker Fields</string>
+	</dict>
+	<key>snippetsTE2</key>
+	<array>
+		<dict>
+			<key>abbreviation</key>
+			<string>fiaddress</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>Fields Address</string>
+			<key>modificationDate</key>
+			<date>2018-05-03T00:21:34Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;Field id=\"10\" dataType=\"Text\" fieldType=\"Normal\" name=\"addressLine1\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"11\" dataType=\"Text\" fieldType=\"Normal\" name=\"addressLine2\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"12\" dataType=\"Text\" fieldType=\"Normal\" name=\"addressCity\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"13\" dataType=\"Text\" fieldType=\"Normal\" name=\"addressState\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"14\" dataType=\"Text\" fieldType=\"Normal\" name=\"addressZip\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"15\" dataType=\"Text\" fieldType=\"Normal\" name=\"addressCountry\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>BE13B0AF-F20C-4E20-BD59-DDBBBE17DDEB</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>fidefault</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>Fields Default</string>
+			<key>modificationDate</key>
+			<date>2018-09-01T05:34:42Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;Field id=\"11\" dataType=\"Text\" fieldType=\"Normal\" name=\"id\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"False\" overwriteExistingValue=\"True\" alwaysEvaluate=\"False\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"True\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;Calculation table=\"Test\"&gt;
+&lt;![CDATA[Get ( UUID )]]&gt;
+&lt;/Calculation&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"True\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"True\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"True\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"Minimal\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"12\" dataType=\"TimeStamp\" fieldType=\"Normal\" name=\"creationTimestamp\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" value=\"CreationTimeStamp\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"13\" dataType=\"TimeStamp\" fieldType=\"Normal\" name=\"modificationTimestamp\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" value=\"ModificationTimeStamp\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"14\" dataType=\"Text\" fieldType=\"Normal\" name=\"creationAccount\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" value=\"CreationAccountName\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"15\" dataType=\"Text\" fieldType=\"Normal\" name=\"modificationAccount\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" value=\"ModificationAccountName\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"16\" dataType=\"Number\" fieldType=\"Normal\" name=\"z_xJoin\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage indexLanguage=\"English\" global=\"True\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>F1F3E9A0-96BD-4E81-990B-08476BBF366B</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>finame</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>Fields Name</string>
+			<key>modificationDate</key>
+			<date>2018-05-03T00:21:26Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;Field id=\"7\" dataType=\"Text\" fieldType=\"Normal\" name=\"nameFirst\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"8\" dataType=\"Text\" fieldType=\"Normal\" name=\"nameMiddle\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;Field id=\"9\" dataType=\"Text\" fieldType=\"Normal\" name=\"nameLast\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage autoIndex=\"True\" index=\"None\" indexLanguage=\"English\" global=\"False\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>0CF3B189-F100-4340-9D8D-CF5481E8D9CB</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>fizxjoin</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>Fields z_xJoin</string>
+			<key>modificationDate</key>
+			<date>2018-05-03T00:23:32Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;Field id=\"1\" dataType=\"Number\" fieldType=\"Normal\" name=\"z_xJoin\"&gt;
+&lt;Comment&gt;&lt;/Comment&gt;
+&lt;AutoEnter allowEditing=\"True\" constant=\"False\" furigana=\"False\" lookup=\"False\" calculation=\"False\"&gt;
+&lt;ConstantData&gt;1&lt;/ConstantData&gt;
+&lt;/AutoEnter&gt;
+&lt;Validation message=\"False\" maxLength=\"False\" valuelist=\"False\" calculation=\"False\" alwaysValidateCalculation=\"False\" type=\"OnlyDuringDataEntry\"&gt;
+&lt;NotEmpty value=\"False\"&gt;&lt;/NotEmpty&gt;
+&lt;Unique value=\"False\"&gt;&lt;/Unique&gt;
+&lt;Existing value=\"False\"&gt;&lt;/Existing&gt;
+&lt;StrictValidation value=\"False\"&gt;&lt;/StrictValidation&gt;
+&lt;/Validation&gt;
+&lt;Storage indexLanguage=\"English\" global=\"True\" maxRepetition=\"1\"&gt;&lt;/Storage&gt;
+&lt;/Field&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>B7EBD028-F47A-4E2B-A357-C2340B90D8ED</string>
+		</dict>
+	</array>
+</dict>
+</plist>

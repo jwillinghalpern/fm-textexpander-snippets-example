@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>groupInfo</key>
+	<dict>
+		<key>expandAfterMode</key>
+		<integer>0</integer>
+		<key>groupName</key>
+		<string>Filemaker Script Steps copy</string>
+	</dict>
+	<key>snippetsTE2</key>
+	<array>
+		<dict>
+			<key>abbreviation</key>
+			<string>ssHeader</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>ss Script Header</string>
+			<key>modificationDate</key>
+			<date>2018-12-22T00:14:01Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;###################################################################################&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;PURPOSE:&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;&amp;#09;description&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;PARAM:&amp;#09;&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;&amp;#09;param1 | text | description1&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;&amp;#09;param2 | text | (optional) description1&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;JSONSetElement ( &amp;quot;&amp;quot; ;&amp;#13;&amp;#09;[ &amp;quot;param1&amp;quot; ; value ; JSONString ];&amp;#13;&amp;#09;[ &amp;quot;param2&amp;quot; ; value ; JSONString ]&amp;#13;)&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;RESULT:&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;&amp;#09;result&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;&amp;#09;error&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;REVISIONS:&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;&amp;#09;&amp;#13;{{date}}&amp;#09;Joshua Willing&amp;#09;jwillinghalpern@gmail.com&lt;/Text&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+		&lt;Text&gt;###################################################################################&lt;/Text&gt;
+	&lt;/Step&gt;
+&lt;/fmxmlsnippet&gt;"
+
+
+set userName to short user name of (system info)
+
+-- get date
+set theDate to do shell script "date '+%Y-%m-%d'"
+
+-- replace function
+%snippet:fnfindandreplace%
+
+-- replace
+set clip to findAndReplaceInText(clip, "{{date}}", theDate)
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastescriptsteps%
+
+
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>B134FA99-8429-4DD4-80F9-F05401208788</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>ssjloop</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>ss j Loop</string>
+			<key>modificationDate</key>
+			<date>2019-02-18T00:28:42Z</date>
+			<key>plainText</key>
+			<string>-- user input
+%filltop%
+set i to "%filltext:name=iterator:default=$j%"
+set c to "%filltext:name=count:default=$jCount%"
+
+-- xml clip
+set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;Step enable=\"True\" id=\"141\" name=\"Set Variable\"&gt;
+&lt;Value&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[0]]&gt;
+&lt;/Calculation&gt;
+&lt;/Value&gt;
+&lt;Repetition&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[1]]&gt;
+&lt;/Calculation&gt;
+&lt;/Repetition&gt;
+&lt;Name&gt;$i&lt;/Name&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"71\" name=\"Loop\"&gt;&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"72\" name=\"Exit Loop If\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[Let ( $i = $i + 1 ; If ( $i &gt; Int ( $count ) ; Let ( $i = \"\" ; True ) ) )]]&gt;
+&lt;/Calculation&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"73\" name=\"End Loop\"&gt;&lt;/Step&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- find and replace function
+%snippet:fnfindandreplace%
+
+-- replace text
+set clip to findAndReplaceInText(clip, "$i", i)
+set clip to findAndReplaceInText(clip, "$count", c)
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+-- paste in script steps
+%snippet:_fmpastescriptsteps%
+
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>027F9AA1-67BF-4FED-B756-A0B9DC6FEF9E</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>ssloop</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>ss Loop</string>
+			<key>modificationDate</key>
+			<date>2018-11-11T01:42:41Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;Step enable=\"True\" id=\"141\" name=\"Set Variable\"&gt;
+&lt;Value&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[0]]&gt;
+&lt;/Calculation&gt;
+&lt;/Value&gt;
+&lt;Repetition&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[1]]&gt;
+&lt;/Calculation&gt;
+&lt;/Repetition&gt;
+&lt;Name&gt;$i&lt;/Name&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"71\" name=\"Loop\"&gt;&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"72\" name=\"Exit Loop If\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[Let ( $i = $i + 1 ; If ( $i &gt; Int ( $count ) ; Let ( $i = \"\" ; True ) ) )]]&gt;
+&lt;/Calculation&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"73\" name=\"End Loop\"&gt;&lt;/Step&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastescriptsteps%
+
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>90F2DA2C-91D7-4859-8F58-E7D8669382E9</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>ssrecordnum</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>ss Record Number</string>
+			<key>modificationDate</key>
+			<date>2018-08-25T05:20:48Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;Step enable=\"True\" id=\"141\" name=\"Set Variable\"&gt;
+&lt;Value&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[Get ( RecordNumber )]]&gt;
+&lt;/Calculation&gt;
+&lt;/Value&gt;
+&lt;Repetition&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[1]]&gt;
+&lt;/Calculation&gt;
+&lt;/Repetition&gt;
+&lt;Name&gt;$recordNumber&lt;/Name&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"16\" name=\"Go to Record/Request/Page\"&gt;
+&lt;NoInteract state=\"True\"&gt;&lt;/NoInteract&gt;
+&lt;RowPageLocation value=\"ByCalculation\"&gt;&lt;/RowPageLocation&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[$recordNumber]]&gt;
+&lt;/Calculation&gt;
+&lt;/Step&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastescriptsteps%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>A6B01A69-A287-46E3-B8D3-B83016BAC45C</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>sssinglepass</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>ss Single Pass Loop</string>
+			<key>modificationDate</key>
+			<date>2018-10-21T20:30:43Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;Step enable=\"True\" id=\"71\" name=\"Loop\"&gt;&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+&lt;Text&gt;single-pass loop for error trapping&lt;/Text&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+&lt;Text&gt;\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\&lt;/Text&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+&lt;Text&gt;////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////&lt;/Text&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+&lt;Text&gt;end single-pass loop for error trapping&lt;/Text&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"72\" name=\"Exit Loop If\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[True]]&gt;
+&lt;/Calculation&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"73\" name=\"End Loop\"&gt;&lt;/Step&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastescriptsteps%
+
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>07EA1DDC-45CF-4D3A-9226-BCF9DD94A1F8</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>ssvalidparam</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>ss Valid Param</string>
+			<key>modificationDate</key>
+			<date>2018-06-15T19:56:05Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;Step enable=\"True\" id=\"89\" name=\"# (comment)\"&gt;
+&lt;Text&gt;Param&lt;/Text&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"68\" name=\"If\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[Left ( JSONFormatElements ( Get ( ScriptParameter ) ) ; 1 ) &lt;&gt; \"?\"]]&gt;
+&lt;/Calculation&gt;
+&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"141\" name=\"Set Variable\"&gt;&lt;/Step&gt;
+&lt;Step enable=\"True\" id=\"70\" name=\"End If\"&gt;&lt;/Step&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastescriptsteps%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>7337F25C-4233-45FD-A5F8-9A118D18EBE5</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>ssallowabort</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>ss AllowAbort</string>
+			<key>modificationDate</key>
+			<date>2019-01-09T06:46:25Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+	&lt;Step enable=\"True\" id=\"141\" name=\"Set Variable\"&gt;
+		&lt;Value&gt;
+			&lt;Calculation&gt;
+				&lt;![CDATA[Get ( AllowAbortState )]]&gt;
+&lt;/Calculation&gt;
+		&lt;/Value&gt;
+		&lt;Repetition&gt;
+			&lt;Calculation&gt;
+				&lt;![CDATA[1]]&gt;
+&lt;/Calculation&gt;
+		&lt;/Repetition&gt;
+		&lt;Name&gt;$AllowAbortState&lt;/Name&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"141\" name=\"Set Variable\"&gt;
+		&lt;Value&gt;
+			&lt;Calculation&gt;
+				&lt;![CDATA[Get ( ErrorCaptureState )]]&gt;
+&lt;/Calculation&gt;
+		&lt;/Value&gt;
+		&lt;Repetition&gt;
+			&lt;Calculation&gt;
+				&lt;![CDATA[1]]&gt;
+&lt;/Calculation&gt;
+		&lt;/Repetition&gt;
+		&lt;Name&gt;$ErrorCaptureState&lt;/Name&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"85\" name=\"Allow User Abort\"&gt;
+		&lt;Set state=\"False\"&gt;&lt;/Set&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"86\" name=\"Set Error Capture\"&gt;
+		&lt;Set state=\"True\"&gt;&lt;/Set&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"68\" name=\"If\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[$AllowAbortState = 1]]&gt;
+&lt;/Calculation&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"85\" name=\"Allow User Abort\"&gt;
+		&lt;Set state=\"True\"&gt;&lt;/Set&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"70\" name=\"End If\"&gt;&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"68\" name=\"If\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[$ErrorCaptureState = 0]]&gt;
+&lt;/Calculation&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"86\" name=\"Set Error Capture\"&gt;
+		&lt;Set state=\"False\"&gt;&lt;/Set&gt;
+	&lt;/Step&gt;
+	&lt;Step enable=\"True\" id=\"70\" name=\"End If\"&gt;&lt;/Step&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastescriptsteps%
+
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>A2509A55-E605-49B3-BCF3-1BFBA7EE26C5</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>ssexplodefind</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-10-27T03:34:31Z</date>
+			<key>label</key>
+			<string>ss Explode Find</string>
+			<key>modificationDate</key>
+			<date>2019-01-05T23:11:51Z</date>
+			<key>plainText</key>
+			<string>-- Convert clipboard xml to filemaker object
+set p to "%snippet:fmClipToolsScriptsFolder%/fmClip - Perform Find to Script Steps.applescript"
+set a to POSIX file p
+run script file a
+
+-- Return empty string
+""</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>84F8CD86-1F6A-4340-876C-BCF494A3367E</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>ssgist</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>ss Gist</string>
+			<key>modificationDate</key>
+			<date>2019-01-06T00:23:49Z</date>
+			<key>plainText</key>
+			<string>set clip to do shell script "curl https://gist.githubusercontent.com/jwillinghalpern/11047b468f8a3845b139dfc5bdc13a78/raw/93602980e94add49f9d2b077af90fc3e3698f80b/test%2520fmclip"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastescriptsteps%
+
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>15CA5A34-50AB-4695-9062-278F0E50AB1A</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>sscurl</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T06:32:02Z</date>
+			<key>label</key>
+			<string>ss Curl</string>
+			<key>modificationDate</key>
+			<date>2019-01-06T00:27:12Z</date>
+			<key>plainText</key>
+			<string>set clip to do shell script "curl file://%snippet:fmxmlsnippetfolder%/test-function.xml"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastescriptsteps%
+
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>693F8FFC-4258-47E8-8DA3-87F8E40BB704</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>fmClipToolsScriptsFolder</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2019-01-05T23:07:00Z</date>
+			<key>label</key>
+			<string>FmClipTools Scripts Folder</string>
+			<key>modificationDate</key>
+			<date>2019-01-05T23:08:27Z</date>
+			<key>plainText</key>
+			<string>/[[PATH TO]]/FmClipTools/Scripts</string>
+			<key>snippetType</key>
+			<integer>0</integer>
+			<key>uuidString</key>
+			<string>16C24802-5BC0-43AE-AC1C-5F343BD96B20</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string></string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T07:49:48Z</date>
+			<key>label</key>
+			<string>ss Template: Script Steps</string>
+			<key>modificationDate</key>
+			<date>2019-01-06T02:22:01Z</date>
+			<key>plainText</key>
+			<string>set clip to &lt;&lt;your quoted xml&gt;&gt;
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastescriptsteps%
+
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>FFFD781F-4784-44A5-818F-FB86B12F6ED5</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>fmxmlsnippetfolder</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2019-01-05T22:14:34Z</date>
+			<key>label</key>
+			<string>fm xml snippet folder</string>
+			<key>modificationDate</key>
+			<date>2019-01-06T02:00:03Z</date>
+			<key>plainText</key>
+			<string>/[[PATH TO]]/fm-xml-script-snippets</string>
+			<key>snippetType</key>
+			<integer>0</integer>
+			<key>uuidString</key>
+			<string>21DDCFF8-628B-4035-9599-0ED374D4A82D</string>
+		</dict>
+	</array>
+</dict>
+</plist>

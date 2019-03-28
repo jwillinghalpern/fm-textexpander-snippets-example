@@ -1,0 +1,2464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>groupInfo</key>
+	<dict>
+		<key>expandAfterMode</key>
+		<integer>0</integer>
+		<key>groupName</key>
+		<string>Filemaker Custom Functions</string>
+	</dict>
+	<key>snippetsTE2</key>
+	<array>
+		<dict>
+			<key>abbreviation</key>
+			<string>cfcustomlist</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-08-23T19:26:39Z</date>
+			<key>label</key>
+			<string>cf Custom List</string>
+			<key>modificationDate</key>
+			<date>2018-08-31T20:45:59Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;CustomFunction id=\"29\" functionArity=\"3\" visible=\"True\" parameters=\"Start;End;Function\" name=\"CustomList\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*       Special Thanks to Ugo Di Luca - Grazie Mille, pour l'aiguillage qu'il m'a fait prendre,
+                          Thank you for all his comments and his notice  ®  Ugo Di Luca 
+===========================================================
+
+//   Author: Agnès Barouh - filemaker@tictac.fr
+
+//   CustomList ( Start ; End ; Function )  v_4.8.1
+// [please, do not used \"CLNum\" in your calculation with Let() ]
+//   Objectives and examples  :
+
+- Build any list based on all Native or Custom Functions involving a 'Number' value as a parameter, such as :
+Left(), Middle(), GetValue(), GetRepetitionNumber (),  GetNthRecord(), GetLayoutObjectAttribute () ...
+ex : - CustomList ( 1 ; Get ( FoundCount ) ; \"GetNthRecord ( FirstName ; [n] )\" ) 
+will return James¶Henry¶Susan if your foundset has 3 records.
+
+- Build any range based on Dates, Times, TimeStamps, and obviously Numbers
+ex : CustomList ( 1 ; 5 ; \"GetAsDate ( StartingDate ) + [n]\" )
+will return a range of 5 dates starting from the specified StartingDate
+
+The 'Function' Parameter is nothing else than a litteral calculation expression. 
+Therefore, CustomList allows for any filtering or parsing process based on any condition you may need.
+ex : CustomList ( 10 ; 100 ; \"Let ( [ Value = GetValue ( MyList ; [n] ) ] ; Case ( PatternCount ( Value ; \"X\" ) ; Value ))\" )
+will parse any value containing a \"X\" in  the 'MyList' chain, in between the 10th and the 100th values.
+
+See the 'Under the Hood' part at the end of the function to fully understand the process of this function
+
+--------------------------------
+/* Add Nota for variable \"iter\" */ 10/16/2015
+/* MAJOR UPDATE */  Updated July'08
+/* UPDATE */  Updated August'10 for adapte to FileMakerGo
+/* UPDATE */  Updated November'11 for adapte to FileMakerServer
+/* UPDATE */  Updated November'12 for adapte to FileMaker IWP
+
+
+--------------------------------
+
+CustomList is based on a totally new algorithm, and is now volontarily bridled to a maximum range of 500,000 values, where the first version was technically limited to a max of 18,700 values.
+Previous version still available here : http://www.briandunning.com/cf/747
+
+The new CustomList() is faster and still is NOT recursive.
+The arguments are unchanged which makes it compatible with all your previous developments involving CustomList().
+
+For Developper ease, the new CustomList() includes a debugging mode.
+find the \"*****DEBUGGING MODE*****\" tag in the formula below to switch mode.
+When debug is set to 1, any error will be returned with its appropriate explanatory code, else the result will be set to \"?\"
+-------------------------------- */
+
+// ----------- FORMULA STARTS HERE -----------
+
+Case (
+           /*This function will not evaluate if Invalid parameters were passed for Start and End.*/
+
+            IsEmpty ( Start ) or IsEmpty ( End ) or End &lt; 1 or Start &lt; 1; \"\";
+          
+            Let ( [
+                         Start =  GetAsNumber ( Start );
+                         End =   GetAsNumber ( End );
+                         Diff = End - Start + 1;
+                         V =  Case ( Left ( Get ( ApplicationVersion ) ; 2 ) = \"Go\" ; 1 ; Left ( Get ( ApplicationVersion ) ; 2 ) = \"Se\" ; 2 ; Left ( Get ( ApplicationVersion ) ; 2 ) = \"We\" ; 3 ; 0 ) ;
+                         PL = Choose ( V ; 1700  ; 400 ; 300 ; 900 ) ;
+
+                         /*Check for a range higher than 500,000 values  ( max 150000 values for FmGo and 120000 for FmS and 250000 for IWP ).
+                          For FMPro/Adv, CustomList() is volontarily restrained to 500 000 but you can but you can go beyond.*/
+
+                         End =   Case ( ( Diff &gt; Choose ( V ; 500000  ; 150000 ; 120000 ; 250000 ) ) or ( End &lt; Start ) or IsEmpty ( Start ) or IsEmpty ( End ); \"Error\"; End );
+                         $null = \"\\\"\\\"\";
+
+                         /*CustomList has its own recursion model. As CustomList may be involved into the \"function\" argument, 
+                         each CustomList expression used is passed to a repeating variable for evaluation*/
+
+/****** NOTA : If you change the name of the CF, \"CustomList\", Change here too. ****/
+                         iter = Let ( $CLExeCount = $CLExeCount + 1 ; $CLExeCount &amp; PatternCount ( Function ; \"CustomList\" ) + 1 ) ; 
+                         $CLn[ iter ]  = Start - 1;
+
+                         Calc = Case ( Diff ≥ ( PL - 10 ) ; ( PL / 10 )  ; Floor ( Diff / 10 ) + 1 );
+
+                         /*Here starts the \"magic\" of the Substitutions and the whole mechanism.
+                         CustomList() is set to evaluate stacks of 1,700 values at a time ( 400 for FileMakerGo), which is the 
+                         current limit of FileMaker internal Evaluate function */
+
+                         First = Substitute ( ( 10 ^ Calc ) - 1; 9; \"__________\" ) ;  
+                         X = Floor ( Diff / PL );
+                         $CLRemainder[ iter ]  = Diff - ( X * PL );
+
+                         /*When the \"Function\" argument is left empty, CustomList() will return a numeric list based on the range defined */
+
+                         FunctionR = Case ( IsEmpty ( Function ); \"CLNum\"; Substitute ( Function; [\"[n]\"; \"CLNum\"] ; [¶ ; \"\"] ) );
+
+                         /*Each repeating variable content is parsed in order to get our String ready for the last evaluation - Special care is made for
+                         French users here, please substitute the \"definir\" below with your local translation of the \"Let\" function if you're not using an english
+                         version. The use of \"Let ([\" is recommanded anyway */
+
+                         $CLExecute[ iter ] = Case ( Left ( Substitute ( Lower ( Function ); [\"definir\"; \"Let\" ]; [\" \"; \"\"]; [\"¶\"; \"\"]); 5 ) = \"Let([\";
+                                            Substitute (  First ; [ \"_\";  \"Let([$CLn[\" &amp; iter &amp; \"]=$CLn[\" &amp; iter &amp; \"]+1;CLNum=$CLn[\" &amp; iter &amp; \"];\" &amp;
+                                            Replace ( FunctionR; 1; Position ( FunctionR; \"[\"; 1; 1 ); \"\" ) &amp; \"&amp;\\¶&amp;¶\"] );
+                                            Substitute ( First ; [ \"_\";  \"Let([$CLn[\" &amp; iter &amp; \"]=$CLn[\" &amp; iter &amp; \"]+1;CLNum=$CLn[\" &amp; iter &amp; \"]];\" &amp; FunctionR &amp; \")&amp;\\¶&amp;¶\"] ) );
+
+                         /*Final compilation starts here. The reminder part above each 1,700 values is treated now. */
+  
+                          Final = Case ( X &gt; 0; Substitute ( ( 10 ^ X ) - 1; 9; \"Evaluate ( $CLExecute[\" &amp; iter &amp; \"] &amp; $null ) &amp; \" ) ) &amp;
+                                      \"Evaluate( LeftValues ( $CLExecute[\" &amp; iter &amp; \"] ; $CLRemainder[\" &amp; iter &amp; \"]  ) &amp; $null ) &amp; \" &amp; $null;
+
+                         /*The Final variable can now be evaluated to get our List*/
+
+                          Result  =   Case ( End &lt;&gt; \"Error\"; Substitute ( \"#^#\" &amp; Evaluate  ( Final ) &amp; \"#^#\";
+                                           [ \"#^#|#^#\"; \"¶\" ]; [ \"¶\"; \"¶#^#\" ]; [ \"#^#¶\"; \"\" ]; [ \"¶#^#\"; \"¶\" ]; [ \"¶#^#\"; \"\" ]; [ \"#^#\"; \"\" ] ) ) ;
+                          $CLExecute[ iter ]  = \"\" 
+
+// ----------- FUNCTION RESULT BELOW -----------
+            ];
+/*CustomList returns either the valid result, or an error formatted according to the debugging mode chosen above*/
+
+     Case (
+          ( Length ( Result ) and ( Result = Filter ( Result; \"?\" ))) or End =  \"Error\";
+          Let ([
+                    /*****DEBUGGING MODE*****/   // Case Debug = 1, returned error \"[error_CL], Number, Name and Calculation error\" ,if Debug  &lt;&gt; 1, returned error is \"?\"
+                    Debug = \"1\";
+                    Write = Substitute ( Function; \"[n]\"; 1 ); NumError = EvaluationError ( Evaluate ( Write ) );
+                    Error = \"[\" &amp; NumError &amp; \"] \" &amp; \"Unlisted error | Unknown error, check calculation or check \\\"Start\\\" and \\\"End\\\" ¶102 | Field is missing¶103 | Relationship is missing¶106 | Table is missing¶113 | Function is missing¶1204 | Number, text constant, field name or \\\"(\\\" expected¶1205 | Comment is not terminated with \\\"*/\\\"¶1206 | Text constant must end with a quotation mark¶1207 | Unbalanced parenthesis¶1208 | Operator or function missing or \\\"(\\\" not expected¶1211 | List usage is not allowed in this function¶1212 | An operator (for example, +, -, *,;) is expected here¶1215 | This parameter is an invalid Get function parameter\";
+                    Pos = ValueCount ( Left ( Error; Position ( Error; NumError &amp; \" \"; 1; 1 ) ) )
+     ];
+          Case ( Debug = 1; \"[Error_CL]  | Return error : \" &amp; GetValue ( Error; Case ( Pos = 0; 1; Pos ) ) &amp; ¶ &amp; TextStyleAdd ( \"Calculation ( for [n] = 1 ) : \"; Bold ) &amp; Write; \"?\" ));
+  Result ))
+)
+
+// ----------- UNDER THE HOOD -----------
+
+/* Not very much afterwards...
+Basically, CustomList() does two things :
+1/ Transform your formula in a litteral chain :
+
+CustomList ( 1; 4; \"GetNthRecord ( Field ; [n])\")
+therefore becomes
+\"Let ([ CLNum = 1 ] ; GetNthRecord ( Field ; CLNum )) &amp; ¶ &amp;
+Let ([ CLNum = 2 ] ; GetNthRecord ( Field ; CLNum )) &amp; ¶ &amp;
+Let ([ CLNum = 3 ] ; GetNthRecord ( Field ; CLNum )) &amp; ¶ &amp;
+Let ([ CLNum = 4 ] ; GetNthRecord ( Field ; CLNum ))\"
+
+2/ Evaluates this chain.
+
+Interrested in the mechanism ?
+My advice then : dissect this function by escaping the 'Result' and placing one of the numerous intermediary variables available.
+Special attention should be paid to the 'First' Variable, everything starts from there !
+*/]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>B7771D8B-1D2F-4F20-89D3-5FE96731391F</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>cferror</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-08-23T19:26:39Z</date>
+			<key>label</key>
+			<string>cf Error</string>
+			<key>modificationDate</key>
+			<date>2018-08-24T10:00:08Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;CustomFunction id=\"2\" functionArity=\"3\" visible=\"True\" parameters=\"errorCode;descriptor;data\" name=\"Error\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/**
+ *
+ * wraps the error in a JSON Object
+ *
+ * @param {number} errorCode the FileMaker Error Code.
+ * @param {string} descriptor describe where the error is happening
+ * @param {object} [data] optional extra data you want to record
+ * 
+ * @return {object} an error object
+ *
+ * @module fm-error-functions
+ * @see https://github.com/karbonfm/fm-error-functions
+ *
+ * @history 2017-10-01, todd@geistinteractive.com, created
+ *
+ */
+
+Let ( 
+[
+e = errorCode;
+e = If( IsEmpty ( e ) ; 0 ; GetAsNumber(e) );
+
+base = JSONSetElement ( \"\" ; \"errorCode\" ; e ; JSONNumber ) ;
+
+basePlusMessage = If ( e &gt;= -1 ; JSONSetElement ( base ; \"errorMessage\"; Error.Description(e) ; JSONString) ; base )
+] ;
+
+Case(
+   not e ; base ;
+   JSONSetElement( basePlusMessage ; 
+               [\"scriptName\" ; Get(ScriptName) ; JSONString];
+               [\"type\" ; \"FM\" ; JSONString] ;
+               [\"descriptor\" ; descriptor ; JSONString] ;
+               [\"data\" ; data ; JSONObject] 
+    )
+
+)
+
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"3\" functionArity=\"1\" visible=\"True\" parameters=\"errorCode\" name=\"Error.Description\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/**
+ *
+ * looks up the error description
+ *
+ * @param {number} errorCode the FileMaker Error Code
+ * 
+ * @return {string} an error object
+ *
+ * @module fm-error-functions
+ * @see https://github.com/karbonfm/fm-error-functions
+ *
+ * @history 2015-10-01, todd@geistinteractive.com, created
+ *
+ */
+
+
+Let(
+       [
+       ~errorCode = errorCode;
+       ~errorDescription =
+                       Case (
+                               ~errorCode = 0 ; \"No error\" ;
+
+                               ~errorCode &lt; 100 ;
+                               Case (
+                                       ~errorCode = -1 ; \"Unknown error\" ;
+                                       ~errorCode = 1 ; \"User canceled action\" ;
+                                       ~errorCode = 2 ; \"Memory error\" ;
+                                       ~errorCode = 3 ; \"Command is unavailable (for example, wrong operating system, wrong mode, etc.)\" ;
+                                       ~errorCode = 4 ; \"Command is unknown\" ;
+                                       ~errorCode = 5 ; \"Command is invalid (for example, a Set Field script step does not have a calculation specified)\" ;
+                                       ~errorCode = 6 ; \"File is read-only\" ;
+                                       ~errorCode = 7 ; \"Running out of memory\" ;
+                                       ~errorCode = 8 ; \"Empty result\" ;
+                                       ~errorCode = 9 ; \"Insufficient privileges\" ;
+                                       ~errorCode = 10 ; \"Requested data is missing\" ;
+                                       ~errorCode = 11 ; \"Name is not valid\" ;
+                                       ~errorCode = 12 ; \"Name already exists\" ;
+                                       ~errorCode = 13 ; \"File or object is in use\" ;
+                                       ~errorCode = 14 ; \"Out of range\" ;
+                                       ~errorCode = 15 ; \"Can't divide by zero\" ;
+                                       ~errorCode = 16 ; \"Operation failed, request retry (for example, a user query)\" ;
+                                       ~errorCode = 17 ; \"Attempt to convert foreign character set to UTF-16 failed\" ;
+                                       ~errorCode = 18 ; \"Client must provide account information to proceed\" ;
+                                       ~errorCode = 19 ; \"String contains characters other than A-Z, a-z, 0-9 (ASCII)\" ;
+                                       ~errorCode = 20 ; \"Command/operation canceled by triggered script\" ;
+                                       \"Unknown error code\"
+                               ) ;
+
+                               ~errorCode &lt; 200 ;
+                               Case (
+                                       ~errorCode = 100 ; \"File is missing\" ;
+                                       ~errorCode = 101 ; \"Record is missing\" ;
+                                       ~errorCode = 102 ; \"Field is missing\" ;
+                                       ~errorCode = 103 ; \"Relationship is missing\" ;
+                                       ~errorCode = 104 ; \"Script is missing\" ;
+                                       ~errorCode = 105 ; \"Layout is missing\" ;
+                                       ~errorCode = 106 ; \"Table is missing\" ;
+                                       ~errorCode = 107 ; \"Index is missing\" ;
+                                       ~errorCode = 108 ; \"Value list is missing\" ;
+                                       ~errorCode = 109 ; \"Privilege set is missing\" ;
+                                       ~errorCode = 110 ; \"Related tables are missing\" ;
+                                       ~errorCode = 111 ; \"Field repetition is invalid\" ;
+                                       ~errorCode = 112 ; \"Window is missing\" ;
+                                       ~errorCode = 113 ; \"Function is missing\" ;
+                                       ~errorCode = 114 ; \"File reference is missing\" ;
+                                       ~errorCode = 115 ; \"Specified menu set is not present\" ;
+                                       ~errorCode = 116 ; \"Specified layout object is not present\" ;
+                                       ~errorCode = 117 ; \"Specified data source is not present\" ;
+                                       ~errorCode = 130 ; \"Files are damaged or missing and must be reinstalled\" ;
+                                       ~errorCode = 131 ; \"Language pack files are missing (such as template files)\" ;
+                                       \"Unknown error code\"
+                               ) ;
+
+                               ~errorCode &lt; 300 ;
+                               Case (
+                                       ~errorCode = 200 ; \"Record access is denied\" ;
+                                       ~errorCode = 201 ; \"Field cannot be modified\" ;
+                                       ~errorCode = 202 ; \"Field access is denied\" ;
+                                       ~errorCode = 203 ; \"No records in file to print, or password doesn't allow print access\" ;
+                                       ~errorCode = 204 ; \"No access to field(s) in sort order\" ;
+                                       ~errorCode = 205 ; \"User does not have access privileges to create new records; import will overwrite existing data\" ;
+                                       ~errorCode = 206 ; \"User does not have password change privileges, or file is not modifiable\" ;
+                                       ~errorCode = 207 ; \"User does not have sufficient privileges to change database schema, or file is not modifiable\" ;
+                                       ~errorCode = 208 ; \"Password does not contain enough characters\" ;
+                                       ~errorCode = 209 ; \"New password must be different from existing one\" ;
+                                       ~errorCode = 210 ; \"User account is inactive\" ;
+                                       ~errorCode = 211 ; \"Password has expired\" ;
+                                       ~errorCode = 212 ; \"Invalid user account and/or password; please try again\" ;
+                                       ~errorCode = 213 ; \"User account and/or password does not exist\" ;
+                                       ~errorCode = 214 ; \"Too many login attempts\" ;
+                                       ~errorCode = 215 ; \"Administrator privileges cannot be duplicated\" ;
+                                       ~errorCode = 216 ; \"Guest account cannot be duplicated\" ;
+                                       ~errorCode = 217 ; \"User does not have sufficient privileges to modify administrator account\" ;
+                                       \"Unknown error code\"
+                               ) ;
+
+                               ~errorCode &lt; 500 ;
+                               Case (
+                                       ~errorCode = 300 ; \"File is locked or in use\" ;
+
+                                       // Testing new versions 
+                                       ~errorCode = 301 ; \"Record is in use by \"  &amp; Get ( LastExternalErrorDetail );
+                                       ~errorCode = 302 ; \"Table is in use by another user\" ;
+                                       ~errorCode = 303 ; \"Database schema is in use by another user\" ;
+                                       ~errorCode = 304 ; \"Layout is in use by another user\" ;
+                                       ~errorCode = 306 ; \"Record modification ID does not match\" ;
+                                       ~errorCode = 400 ; \"Find criteria are empty\" ;
+                                       ~errorCode = 401 ; \"No records match the request\" ;
+                                       ~errorCode = 402 ; \"Selected field is not a match field for a lookup\" ;
+                                       ~errorCode = 403 ; \"Exceeding maximum record limit for trial version of FileMaker Pro\" ;
+                                       ~errorCode = 404 ; \"Sort order is invalid\" ;
+                                       ~errorCode = 405 ; \"Number of records specified exceeds number of records that can be omitted\" ;
+                                       ~errorCode = 406 ; \"Replace/Reserialize criteria are invalid\" ;
+                                       ~errorCode = 407 ; \"One or both match fields are missing (invalid relationship)\" ;
+                                       ~errorCode = 408 ; \"Specified field has inappropriate data type for this operation\" ;
+                                       ~errorCode = 409 ; \"Import order is invalid\" ;
+                                       ~errorCode = 410 ; \"Export order is invalid\" ;
+                                       ~errorCode = 412 ; \"Wrong version of FileMaker Pro used to recover file\" ;
+                                       ~errorCode = 413 ; \"Specified field has inappropriate field type\" ;
+                                       ~errorCode = 414 ; \"Layout cannot display the result\" ;
+                                       ~errorCode = 415 ; \"One or more required related records are not available\" ;
+                                       ~errorCode = 416 ; \"Primary key required from data source table\" ;
+                                       ~errorCode = 417 ; \"Database is not supported for ODBC operations\" ;
+                                       \"Unknown error code\"
+                               ) ;
+
+                               ~errorCode &lt; 700 ;
+                               Case (
+                                       ~errorCode = 500 ; \"Date value does not meet validation entry options\" ;
+                                       ~errorCode = 501 ; \"Time value does not meet validation entry options\" ;
+                                       ~errorCode = 502 ; \"Number value does not meet validation entry options\" ;
+                                       ~errorCode = 503 ; \"Value in field is not within the range specified in validation entry options\" ;
+                                       ~errorCode = 504 ; \"Value in field is not unique as required in validation entry options\" ;
+                                       ~errorCode = 505 ; \"Value in field is not an existing value in the database file as required in validation entry options\" ;
+                                       ~errorCode = 506 ; \"Value in field is not listed on the value list specified in validation entry option\" ;
+                                       ~errorCode = 507 ; \"Value in field failed calculation test of validation entry option\" ;
+                                       ~errorCode = 508 ; \"Invalid value entered in Find mode\" ;
+                                       ~errorCode = 509 ; \"Field requires a valid value\" ;
+                                       ~errorCode = 510 ; \"Related value is empty or unavailable\" ;
+                                       ~errorCode = 511 ; \"Value in field exceeds maximum number of allowed characters\" ;
+                                       ~errorCode = 512 ; \"Record was already modified by another user\" ;
+                                       ~errorCode = 513 ; \"Record must have a value in some field to be created\" ;
+                                       ~errorCode = 600 ; \"Print error has occurred\" ;
+                                       ~errorCode = 601 ; \"Combined header and footer exceed one page\" ;
+                                       ~errorCode = 602 ; \"Body doesn't fit on a page for current column setup\" ;
+                                       ~errorCode = 603 ; \"Print connection lost\" ;
+                                       \"Unknown error code\"
+                               ) ;
+
+                               ~errorCode &lt; 800 ;
+                               Case (
+                                       ~errorCode = 700 ; \"File is of the wrong file type for import\" ;
+                                       ~errorCode = 706 ; \"EPSF file has no preview image\" ;
+                                       ~errorCode = 707 ; \"Graphic translator cannot be found\" ;
+                                       ~errorCode = 708 ; \"Can't import the file or need color monitor support to import file\" ;
+                                       ~errorCode = 709 ; \"QuickTime movie import failed\" ;
+                                       ~errorCode = 710 ; \"Unable to update QuickTime reference because the database file is read-only\" ;
+                                       ~errorCode = 711 ; \"Import translator cannot be found\" ;
+                                       ~errorCode = 714 ; \"Password privileges do not allow the operation\" ;
+                                       ~errorCode = 715 ; \"Specified Excel worksheet or named range is missing\" ;
+                                       ~errorCode = 716 ; \"A SQL query using DELETE, INSERT, or UPDATE is not allowed for ODBC import\" ;
+                                       ~errorCode = 717 ; \"There is not enough XML/XSL information to proceed with the import or export\" ;
+                                       ~errorCode = 718 ; \"Error in parsing XML file (from Xerces)\" ;
+                                       ~errorCode = 719 ; \"Error in transforming XML using XSL (from Xalan)\" ;
+                                       ~errorCode = 720 ; \"Error when exporting; intended format does not support repeating fields\" ;
+                                       ~errorCode = 721 ; \"Unknown error occurred in the parser or the transformer\" ;
+                                       ~errorCode = 722 ; \"Cannot import data into a file that has no fields\" ;
+                                       ~errorCode = 723 ; \"You do not have permission to add records to or modify records in the target table\" ;
+                                       ~errorCode = 724 ; \"You do not have permission to add records to the target table\" ;
+                                       ~errorCode = 725 ; \"You do not have permission to modify records in the target table\" ;
+                                       ~errorCode = 726 ; \"There are more records in the import file than in the target table; not all records were imported\" ;
+                                       ~errorCode = 727 ; \"There are more records in the target table than in the import file; not all records were updated\" ;
+                                       ~errorCode = 729 ; \"Errors occurred during import; records could not be imported\" ;
+                                       ~errorCode = 730 ; \"Unsupported Excel version (convert file to Excel 7.0 (Excel 95), 97, 2000, XP, or 2007 format and try again)\" ;
+                                       ~errorCode = 731 ; \"The file you are importing from contains no data\" ;
+                                       ~errorCode = 732 ; \"This file cannot be inserted because it contains other files\" ;
+                                       ~errorCode = 733 ; \"A table cannot be imported into itself\" ;
+                                       ~errorCode = 734 ; \"This file type cannot be displayed as a picture\" ;
+                                       ~errorCode = 735 ; \"This file type cannot be displayed as a picture; it will be inserted and displayed as a file\" ;
+                                       ~errorCode = 736 ; \"Too much data to export to this format; it will be truncated\" ;
+                                       ~errorCode = 737 ; \"Bento collection or library is missing; data cannot be imported\" ;
+                                       \"Unknown error code\"
+                               ) ;
+
+                               ~errorCode &lt; 900 ;
+                               Case (
+                                       ~errorCode = 800 ; \"Unable to create file on disk\" ;
+                                       ~errorCode = 801 ; \"Unable to create temporary file on System disk\" ;
+                                       ~errorCode = 802 ; \"Unable to open file\" ;
+                                       ~errorCode = 803 ; \"File is single user or host cannot be found\" ;
+                                       ~errorCode = 804 ; \"File cannot be opened as read-only in its current state\" ;
+                                       ~errorCode = 805 ; \"File is damaged; use Recover command\" ;
+                                       ~errorCode = 806 ; \"File cannot be opened with this version of FileMaker Pro\" ;
+                                       ~errorCode = 807 ; \"File is not a FileMaker Pro file or is severely damaged\" ;
+                                       ~errorCode = 808 ; \"Cannot open file because access privileges are damaged\" ;
+                                       ~errorCode = 809 ; \"Disk/volume is full\" ;
+                                       ~errorCode = 810 ; \"Disk/volume is locked\" ;
+                                       ~errorCode = 811 ; \"Temporary file cannot be opened as FileMaker Pro file\" ;
+                                       ~errorCode = 813 ; \"Record Synchronization error on network\" ;
+                                       ~errorCode = 814 ; \"File(s) cannot be opened because maximum number is open\" ;
+                                       ~errorCode = 815 ; \"Couldn't open lookup file\" ;
+                                       ~errorCode = 816 ; \"Unable to convert file\" ;
+                                       ~errorCode = 817 ; \"Unable to open file because it does not belong to this solution\" ;
+                                       ~errorCode = 819 ; \"Cannot save a local copy of a remote file\" ;
+                                       ~errorCode = 820 ; \"File is in the process of being closed\" ;
+                                       ~errorCode = 821 ; \"Host forced a disconnect\" ;
+                                       ~errorCode = 822 ; \"FMI files not found; reinstall missing files\" ;
+                                       ~errorCode = 823 ; \"Cannot set file to single-user, guests are connected\" ;
+                                       ~errorCode = 824 ; \"File is damaged or not a FileMaker file\" ;
+                                       \"Unknown error code\"
+                               ) ;
+
+                               ~errorCode &lt; 1200 ;
+                               Case (
+                                       ~errorCode = 900 ; \"General spelling engine error\" ;
+                                       ~errorCode = 901 ; \"Main spelling dictionary not installed\" ;
+                                       ~errorCode = 902 ; \"Could not launch the Help system\" ;
+                                       ~errorCode = 903 ; \"Command cannot be used in a shared file\" ;
+                                       ~errorCode = 905 ; \"No active field selected; command can only be used if there is an active field\" ;
+                                       ~errorCode = 906 ; \"Current file must be shared in order to use this command\" ;
+                                       ~errorCode = 920 ; \"Can’t initialize the spelling engine\" ;
+                                       ~errorCode = 921 ; \"User dictionary cannot be loaded for editing\" ;
+                                       ~errorCode = 922 ; \"User dictionary cannot be found\" ;
+                                       ~errorCode = 923 ; \"User dictionary is read-only\" ;
+                                       ~errorCode = 951 ; \"An unexpected error occurred (*)\" ;
+                                       ~errorCode = 954 ; \"Unsupported XML grammar (*)\" ;
+                                       ~errorCode = 955 ; \"No database name (*)\" ;
+                                       ~errorCode = 956 ; \"Maximum number of database sessions exceeded (*)\" ;
+                                       ~errorCode = 957 ; \"Conflicting commands (*)\" ;
+                                       ~errorCode = 958 ; \"Parameter missing (*)\" ;
+                                       \"Unknown error code\"
+                               ) ;
+
+                               ~errorCode &lt; 1300 ;
+                               Case (
+                                       ~errorCode = 1200 ; \"Generic calculation error\" ;
+                                       ~errorCode = 1201 ; \"Too few parameters in the function\" ;
+                                       ~errorCode = 1202 ; \"Too many parameters in the function\" ;
+                                       ~errorCode = 1203 ; \"Unexpected end of calculation\" ;
+                                       ~errorCode = 1204 ; \"Number, text constant, field name or \\\"(\\\" expected\" ;
+                                       ~errorCode = 1205 ; \"Comment is not terminated with \\\"*/\\\"\" ;
+                                       ~errorCode = 1206 ; \"Text constant must end with a quotation mark\" ;
+                                       ~errorCode = 1207 ; \"Unbalanced parenthesis\" ;
+                                       ~errorCode = 1208 ; \"Operator missing, function not found or \\\"(\\\" not expected\" ;
+                                       ~errorCode = 1209 ; \"Name (such as field name or layout name) is missing\" ;
+                                       ~errorCode = 1210 ; \"Plug-in function has already been registered\" ;
+                                       ~errorCode = 1211 ; \"List usage is not allowed in this function\" ;
+                                       ~errorCode = 1212 ; \"An operator (for example, +, -, *) is expected here\" ;
+                                       ~errorCode = 1213 ; \"This variable has already been defined in the Let function\" ;
+                                       ~errorCode = 1214 ; \"AVERAGE, COUNT, EXTEND, GETREPETITION, MAX, MIN, NPV, STDEV, SUM and GETSUMMARY: expression found where a field alone is needed\" ;
+                                       ~errorCode = 1215 ; \"This parameter is an invalid Get function parameter\" ;
+                                       ~errorCode = 1216 ; \"Only Summary fields allowed as first argument in GETSUMMARY\" ;
+                                       ~errorCode = 1217 ; \"Break field is invalid\" ;
+                                       ~errorCode = 1218 ; \"Cannot evaluate the number\" ;
+                                       ~errorCode = 1219 ; \"A field cannot be used in its own formula\" ;
+                                       ~errorCode = 1220 ; \"Field type must be normal or calculated\" ;
+                                       ~errorCode = 1221 ; \"Data type must be number, date, time, or timestamp\" ;
+                                       ~errorCode = 1222 ; \"Calculation cannot be stored\" ;
+                                       ~errorCode = 1223 ; \"The function is not implemented\" ;
+                                       ~errorCode = 1224 ; \"The function is not defined\" ;
+                                       ~errorCode = 1225 ; \"The function is not supported in this context\" ;
+                                       \"Unknown error code\"
+                               ) ;
+
+                       // else
+                               Case (
+                                       ~errorCode = 1300 ; \"The specified name can’t be used\" ;
+                                       ~errorCode = 1400 ; \"ODBC driver initialization failed; make sure the ODBC drivers are properly installed\" ;
+                                       ~errorCode = 1401 ; \"Failed to allocate environment (ODBC)\" ;
+                                       ~errorCode = 1402 ; \"Failed to free environment (ODBC)\" ;
+                                       ~errorCode = 1403 ; \"Failed to disconnect (ODBC)\" ;
+                                       ~errorCode = 1404 ; \"Failed to allocate connection (ODBC)\" ;
+                                       ~errorCode = 1405 ; \"Failed to free connection (ODBC)\" ;
+                                       ~errorCode = 1406 ; \"Failed check for SQL API (ODBC)\" ;
+                                       ~errorCode = 1407 ; \"Failed to allocate statement (ODBC)\" ;
+                                       ~errorCode = 1408 ; \"Extended error (ODBC)\" ;
+                                       ~errorCode = 1409 ; \"Error (ODBC)\" ;
+                                       ~errorCode = 1413 ; \"Failed communication link (ODBC)\" ;
+                                       ~errorCode = 1450 ; \"Action requires PHP privilege extension (*)\" ;
+                                       ~errorCode = 1451 ; \"Action requires that current file be remote\" ;
+                                       ~errorCode = 1501 ; \"SMTP authentication failed\" ;
+                                       ~errorCode = 1502 ; \"Connection refused by SMTP server\" ;
+                                       ~errorCode = 1503 ; \"Error with SSL\" ;
+                                       ~errorCode = 1504 ; \"SMTP server requires the connection to be encrypted\" ;
+                                       ~errorCode = 1505 ; \"Specified authentication is not supported by SMTP server\" ;
+                                       ~errorCode = 1506 ; \"Email(s) could not be sent successfully\" ;
+                                       ~errorCode = 1507 ; \"Unable to log in to the SMTP server\" ;
+                                       \"Unknown error code\"
+                               )
+                       )
+       
+       ];
+
+~errorDescription
+
+       
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"4\" functionArity=\"1\" visible=\"True\" parameters=\"thisError\" name=\"Error.IsError\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/**
+ * tests the object for an errorCode.
+ * if the errorCode is NOT \"\" or 0 it returns true
+ *
+ * @param {object} theError
+ *
+ * @return {boolean}
+ *
+ * @module fm-error-functions
+ * @see https://github.com/karbonfm/fm-error-functions
+ *
+ * @history 2015-10-01, todd@geistinteractive.com, created
+ *
+ */
+
+Let(
+[
+
+errorIsEmpty = IsEmpty( thisError );
+
+errorCode =   GetAsBoolean( JSONGetElement ( thisError ; \"errorCode\" ) );
+error =  GetAsBoolean( JSONGetElement ( thisError ; \"error\" ) )
+
+];
+
+Case(
+   errorIsEmpty ; 0;
+   error ; 1;
+   errorCode ; 1;
+   0
+)
+
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"5\" functionArity=\"2\" visible=\"True\" parameters=\"descriptor;data\" name=\"Error.Last\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/**
+ * wraps the Last FileMaker error in a JSON Object
+ *
+ * @param {string} descriptor describe where the error is happening
+ * @param {object} [data] optional extra data you want to record
+ *
+ * @returns {object} error object
+ *
+ * @module fm-error-functions
+ * @see https://github.com/karbonfm/fm-error-functions
+ *
+ * @history 2015-10-01, todd@geistinteractive.com, created
+ *
+ */
+
+Error ( Get (LastError); descriptor; data)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>AD6E27FF-2067-4955-BD1E-722D23E16139</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>cfformatsecondsasDHMS</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-08-23T19:26:39Z</date>
+			<key>label</key>
+			<string>cf Format Seconds As DHMS</string>
+			<key>modificationDate</key>
+			<date>2018-10-07T08:40:43Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;&lt;CustomFunction id=\"40\" functionArity=\"2\" visible=\"True\" parameters=\"numberOfSeconds;delimiter\" name=\"FormatSecondsAsDMHS\"&gt;&lt;Calculation&gt;&lt;![CDATA[/**################################################################################### * FormatSecondsAsDMHS ( numberOfSeconds ; delimiter ) * PURPOSE: *     Formats a number like 3601 to \"1 hr 1 sec\" * *###################################################################################  */ Let ([       ~delim = If ( IsEmpty ( delimiter ) ; \" \" ; delimiter ) ;       ~asTime = GetAsTime ( numberOfSeconds );       ~list = Substitute ( ~asTime ; \":\" ; ¶ );       ~hours = GetValue ( ~list ; 1 );       ~days = Floor ( ~hours / 24 );       ~hours = Mod ( GetValue ( ~list ; 1 ) ; 24 );       ~minutes = GetAsNumber ( GetValue ( ~list ; 2 ) );       ~seconds = GetAsNumber ( GetValue ( ~list ; 3 ) );       ~list =                List (                        If ( ~days ; ~days &amp; \" day\" ) &amp; If ( ~days &gt; 1 ; \"s\" ) ;                       If ( ~hours ; ~hours &amp; \" hr\" ) ;                       If ( ~minutes ; ~minutes &amp; \" min\" ) ;                       If ( ~seconds ; ~seconds &amp; \" sec\" )               );       ~result = Substitute ( ~list ; ¶ ; ~delim ) ;       ~null = \"\"];       ~result)]]&gt;&lt;/Calculation&gt;&lt;/CustomFunction&gt;&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>2275BE6A-2AD2-4CE5-9E58-470D04E3FE85</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>cfiso</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-08-23T19:26:39Z</date>
+			<key>label</key>
+			<string>cf ISO</string>
+			<key>modificationDate</key>
+			<date>2018-08-23T19:33:40Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;CustomFunction id=\"1\" functionArity=\"1\" visible=\"True\" parameters=\"theDate\" name=\"ISOFromDate\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*******************************************************************************
+ * ISOFromDate ( theDate )
+ *
+ * @parameter theDate: The FileMaker date to coerce to ISO 8601 format
+ *
+ * @return theDate rendered in ISO 8601 format: YYYY-MM-DD
+ *
+ * @history 2011-09-22 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Created
+ * @history 2017-05-11 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Adding error
+ * result for non-date input
+ *
+ * @see http://en.wikipedia.org/wiki/ISO_8601
+ ******************************************************************************/
+
+Let ( [
+       _date =
+               If ( Year ( theDate ) = \"?\" ;
+                       GetAsTimestamp ( theDate ) ;
+                       /* Else */ theDate
+               ) ;
+       _year = Year ( _date )
+] ;
+       Case (
+               IsEmpty ( theDate ) ;
+                       \"\" ;
+
+               _year = \"?\" ;
+                       \"? Value is not a date¶  \" &amp; theDate ;
+
+               /* Else */
+                       Right ( \"0000\" &amp; Year ( _date ) ; 4 )
+                       &amp; \"-\"
+                       &amp; Right ( \"00\" &amp; Month ( _date ) ; 2 )
+                       &amp; \"-\"
+                       &amp; Right ( \"00\" &amp; Day ( _date ) ; 2 )
+       )
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"2\" functionArity=\"1\" visible=\"True\" parameters=\"theTime\" name=\"ISOFromTime\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*******************************************************************************
+ * ISOFromTime ( theTime )
+ *
+ * @parameter theTime: The FileMaker time to convert to ISO 8601 format
+ *
+ * @return theTime rendered in ISO 8601 format: hh:mm:ss,sss (24-hour time)
+ *
+ * @history 2017-04-16 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Created
+ * @history 2017-05-11 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Improving response
+ * to error conditions.
+ *
+ * @see http://en.wikipedia.org/wiki/ISO_8601
+ ******************************************************************************/
+
+Let ( [
+       _time =
+               If ( theTime ≥ Time ( 24 ; 0 ; 0 ) ;
+                       GetAsTimestamp ( theTime ) ;
+                       /* Else */ theTime
+               ) ;
+       _seconds = Seconds ( _time ) ;
+       _integerSeconds = Div ( _seconds ; 1 ) ;
+       _fractionSeconds = Mod ( _seconds ; 1 )
+] ;
+       Case (
+               IsEmpty ( theTime ) ;
+                       \"\" ;
+
+               _seconds = \"?\" ;
+                       \"? Value is not a time¶  \" &amp; theTime ;
+
+               /* Else */
+                       Right ( \"00\" &amp; Hour ( _time ) ; 2 )
+                       &amp; \":\" &amp; Right ( \"00\" &amp; Minute ( _time ) ; 2 )
+                       &amp; If ( _seconds &gt; 0 ;
+                               \":\" &amp; Right ( \"00\" &amp; _integerSeconds ; 2 )
+                       )
+                       &amp; If ( _fractionSeconds &gt; 0 ;
+                               \",\" &amp; Replace ( _fractionSeconds ; 1 ; 1 ; \"\" )
+                       )
+       )
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"3\" functionArity=\"1\" visible=\"True\" parameters=\"theTimestamp\" name=\"ISOFromTimestamp\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*******************************************************************************
+ * ISOFromTimestamp ( theTimestamp )
+ *
+ * @parameter theTimestamp: The FileMaker timestamp to coerce to ISO 8601 format
+ *
+ * @return theTimestamp rendered in ISO 8601 format: YYYY-MM-DDThh:mm:ss,sss
+ * (24-hour time)
+ *
+ * @uses ISOFromDate ( theDate )
+ * @uses ISOFromTime ( theTime )
+ *
+ * @history 2011-05-17 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Created
+ * @history 2017-04-16 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Refactoring to use
+ * other functions for date &amp; time components.
+ * @history 2017-05-11 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Improving error
+ * results.
+ *
+ * @see http://en.wikipedia.org/wiki/ISO_8601
+ ******************************************************************************/
+
+Let ( [
+       _date = ISOFromDate ( theTimestamp ) ;
+       _time = ISOFromTime ( theTimestamp ) ;
+       _notValid = Left ( _date ; 1 ) = \"?\" or Left ( _time ; 1 ) = \"?\"
+] ;
+       Case (
+               IsEmpty ( theTimestamp ) ;
+                       \"\" ;
+
+               _notValid ;
+                       \"? Value is not a timestamp¶  \" &amp; theTimestamp ;
+
+               /* Else */
+                       _date &amp; \"T\" &amp; _time
+       )
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"4\" functionArity=\"1\" visible=\"True\" parameters=\"iso8601Date\" name=\"DateFromISO\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*******************************************************************************
+ * DateFromISO ( iso8601Date )
+ * Parses date data formatted according to ISO 8601, and casts it to a
+ * FileMaker date. Dates with limited accuracy will return the first date in the
+ * specified period.
+ *
+ * @parameter iso8601Date: text encoding a date in ISO 8601 format
+ *
+ * @return A date
+ *
+ * @history 2013-01-25 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Created
+ * @history 2017-04-06 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Expanding to
+ * additional allowed formats
+ * @history 2017-04-08 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Refactoring
+ * @history 2017-04-25 - Daniel Smith &lt;dan@filemaker.consulting&gt; - Add
+ * exceptions for JSONGetElement error and empty parameter
+ * @history 2017-04-27 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Removing exception
+ * for JSONGetElement result error. Adjusting response to empty date input to
+ * behave similarly for timestamp input.
+ *
+ * @see https://en.wikipedia.org/wiki/ISO_8601
+ ******************************************************************************/
+
+Let ( [
+       _delimiterPosition = Position ( iso8601Date ; \"T\" ; 1 ; 1 ) ;
+       _text =
+               If ( _delimiterPosition = 0 ;
+                       iso8601Date ;
+                       /* Else */ Left ( iso8601Date ; _delimiterPosition - 1 )
+               ) ;
+
+       _firstHyphen = Position ( _text ; \"-\" ; 1 ; 1 ) ;
+       _totalLength = Length ( _text ) ;
+       _invalid = _firstHyphen = 1 or _totalLength &lt; 7 ;
+       _hyphenFormat = _firstHyphen &gt; 0 ;
+       _weekFormat = Middle ( _text ; If ( _hyphenFormat ; 6 ; 5 ) ; 1 ) = \"W\" ;
+       _ordinalFormat =
+               not _weekFormat and _totalLength = If ( _hyphenFormat ; 8 ; 7 ) ;
+
+       _year = Left ( _text ; 4 )
+] ;
+       Case (
+               IsEmpty ( _text ) ; \"\" ;
+
+               _invalid ;      \"? Not a valid ISO 8601 date¶  \" &amp; iso8601Date ;
+
+               _weekFormat ;
+                       Let ( [
+                                       _jan4 = Date ( 1 ; 4 ; _year ) ;
+                                       _jan4DayOfISOWeek = Mod ( DayOfWeek ( _jan4 ) - 2 ; 7 ) ;
+                                       _startOfFirstISOWeek = _jan4 - _jan4DayOfISOWeek ;
+                                       _week =
+                                               Middle ( _text ; If ( _hyphenFormat ; 7 ; 6 ) ; 2 ) ;
+                                       _day =
+                                               Middle ( _text ; If ( _hyphenFormat ; 10 ; 8 ) ; 3 ) ;
+                                       _day = If ( IsEmpty ( _day ) ; 1 ; /* Else */ _day )
+                       ] ;
+                               _startOfFirstISOWeek + 7 * ( _week - 1 ) + _day - 1
+                       ) ;
+
+               _ordinalFormat ;
+                       Date (
+                               1 ;
+                               Middle ( _text ; If ( _hyphenFormat ; 6 ; 5 ) ; 3 ) ;
+                               _year
+                       ) ;
+
+               /* Else */
+                       Let ( [
+                               _month = Middle ( _text ; If ( _hyphenFormat ; 6 ; 5 ) ; 2 ) ;
+                               _day = Middle ( _text ; If ( _hyphenFormat ; 9 ; 7 ) ; 2 ) ;
+                               _day = If ( IsEmpty ( _day ) ; 1 ; /* Else */ _day )
+                       ] ;
+                               Date ( _month ; _day ; _year )
+                       )
+       )
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"5\" functionArity=\"1\" visible=\"True\" parameters=\"iso8601Time\" name=\"TimeFromISO\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*******************************************************************************
+ * TimeFromISO ( iso8601Time )
+ * Parses time data formatted according to ISO 8601, and casts it to a
+ * FileMaker time. For time with limited precision, the first time in the
+ * specified period will be returned.
+ *
+ * @parameter iso8601Time: text encoding a time in ISO 8601 format
+ *
+ * @return A time
+ *
+ * @history 2017-04-16 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Created
+ * @history 2017-04-25 - Daniel Smith &lt;dan@filemaker.consulting&gt; - Add
+ * exceptions for JSONGetElement error and empty parameter
+ * @history 2017-04-27 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Removing exception
+ * for JSONGetElement result error. Adjusting response to empty date input to
+ * behave similarly for timestamp input.
+ * @history 2017-05-11 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Improving error
+ * result
+ *
+ * @see https://en.wikipedia.org/wiki/ISO_8601
+ ******************************************************************************/
+
+Let ( [
+       _delimiterPosition = Position ( iso8601Time ; \"T\" ; 1 ; 1 ) ;
+       _text =
+               If ( _delimiterPosition = 0 ;
+                       iso8601Time ;
+                       /* Else */ Replace ( iso8601Time ; 1 ; _delimiterPosition ; \"\" )
+               ) ;
+       _timezonePosition =
+               Max (
+                       Position ( _text ; \"Z\" ; 1 ; 1 ) ;
+                       Position ( _text ; \"+\" ; 1 ; 1 ) ;
+                       Position ( _text ; \"-\" ; 1 ; 1 ) ;
+                       Position ( _text ; \"−\" ; 1 ; 1 )
+               ) ;
+       _invalid =
+               _timezonePosition &gt; 0
+               and PatternCount ( _text ; Middle ( _text ; _timezonePosition ; 1 ) ) &gt; 1 ;
+       _text =
+               If ( _timezonePosition = 0 ;
+                       _text ;
+                       /* Else */ Left ( _text ; _timezonePosition - 1 )
+               ) ;
+       _colonFormat = Position ( _text ; \":\" ; 1 ; 1 ) &gt; 0 ;
+       _decimal =
+               Max (
+                       Position ( _text ; \",\" ; 1 ; 1 ) ;
+                       Position ( _text ; \".\" ; 1 ; 1 )
+               ) ;
+       _integer =
+               If ( _decimal = 0 ;
+                       _text ;
+                       /* Else */ Left ( _text ; _decimal - 1 )
+               ) ;
+
+       _hour = Left ( _integer ; 2 ) ;
+       _minute = Middle ( _integer ; If ( _colonFormat ; 4 ; 3 ) ; 2 ) ;
+       _second = Middle ( _integer ; If ( _colonFormat ; 7 ; 5 ) ; 2 )
+] ;
+       Case (
+               IsEmpty ( _text ) ;
+                       \"\" ;
+
+               _invalid ;
+                       \"? Not a valid ISO 8601 time¶  \" &amp; iso8601Time ;
+
+               _decimal ≠ 0 ;
+                       Let ( [
+                               _fraction = Replace ( _text ; 1 ; _decimal ; \"\" ) ;
+                               _fraction = _fraction * 10 ^ ( 0 - Length ( _fraction ) )
+                       ] ;
+                               Case (
+                                       IsEmpty ( _minute ) ;
+                                               Time ( _hour + _fraction ; 0 ; 0 ) ;
+                                       IsEmpty ( _second ) ;
+                                               Time ( _hour ; _minute + _fraction ; 0 ) ;
+                                       /* Else */
+                                               Time ( _hour ; _minute ; _second + _fraction )
+                               )
+                       ) ;
+
+               /* Else */
+                       Time ( _hour ; _minute ; _second )
+       )
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"6\" functionArity=\"1\" visible=\"True\" parameters=\"iso8601Timestamp\" name=\"TimestampFromISO\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*******************************************************************************
+ * TimestampFromISO ( iso8601Timestamp )
+ * Parses timestamp data formatted according to ISO 8601, and casts it to a
+ * FileMaker timestamp. For timestamps with limited precision, the first time in
+ * the specified period will be returned.
+ *
+ * @parameter iso8601Timestamp: text encoding a time in ISO 8601 format
+ *
+ * @return A timestamp
+ *
+ * @uses DateFromISO ( iso8601Date )
+ * @uses TimeFromISO ( iso8601Time )
+ *
+ * @history 2017-04-16 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Created
+ * @history 2017-05-11 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Improving error
+ * result
+ *
+ * @see https://en.wikipedia.org/wiki/ISO_8601
+ ******************************************************************************/
+
+ Let ( [
+       _date = DateFromISO ( iso8601Timestamp ) ;
+       _thereIsNoTime = Position ( iso8601Timestamp ; \"T\" ; 1 ; 1 ) = 0 ;
+       _time =
+               If ( _thereIsNoTime ;
+                       0 ;
+                       /* Else */ TimeFromISO ( iso8601Timestamp )
+               ) ;
+       _error = Left ( _date ; 1 ) = \"?\" or Left ( _time ; 1 ) = \"?\"
+] ;
+       If ( _error ;
+               \"? Not a valid ISO 8601 timestamp¶  \" &amp; iso8601Timestamp ;
+       /* Else */
+               Timestamp ( _date ; _time )
+       )
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>01DE0939-A660-4086-AA5E-745CBB4B8AE9</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>cfsql</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-08-23T19:26:39Z</date>
+			<key>label</key>
+			<string>cf SQL</string>
+			<key>modificationDate</key>
+			<date>2018-08-23T21:15:34Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;CustomFunction id=\"1\" functionArity=\"1\" visible=\"True\" parameters=\"field\" name=\"GFN\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*
+returns the FieldName as a fully qualified SQL name
+
+*/
+
+
+
+ \"\\\"\" &amp;Substitute ( GetFieldName(field) ; \"::\" ; Quote(\".\") ) &amp; \"\\\"\"]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"2\" functionArity=\"1\" visible=\"True\" parameters=\"field\" name=\"GTN\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*   GTN [for GetTableName] returns only the name of the relationship, i.e., the table occurrence (TO) name, as opposed to GetFieldName() which returns the relationship + the field name. This is to be used in SQL queries to protect the TO references from breaking if the TO is renamed.
+
+The Quote() function \"escapes\" problematical characters and SQL reserved words, if any -- otherwise, no harm done.   */
+
+Quote(
+    GetValue(
+        Substitute ( GetFieldName(field) ; \"::\" ; \"¶\" );
+        1
+    )
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"3\" functionArity=\"1\" visible=\"True\" parameters=\"Text\" name=\"Q\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[//  purpose:  Wrap pText in single quotes
+//  usage:   Q ( Text ) 
+//  The purpose of the Substitute is to \"escape\" any internally embedded apostrophes, e.g., O'Malley becomes 'O''Malley', which SQL will convert into O'Malley
+
+
+ \"'\" &amp; Substitute ( Text ; \"'\"; \"''\" ) &amp; \"'\"]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>8D27D16B-29BC-4B75-9ED5-04021F5D217D</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>cftriggers</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-08-23T19:26:39Z</date>
+			<key>label</key>
+			<string>cf Triggers</string>
+			<key>modificationDate</key>
+			<date>2018-08-23T19:27:49Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;CustomFunction id=\"80\" functionArity=\"0\" visible=\"True\" parameters=\"\" name=\"TriggersAreActive\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*******************************************************************************
+ * TriggersAreActive
+ * Checks a global variable to identify whether or not script triggers should be
+ * allowed to run. This function is best used in concert with the
+ * TriggersDisable, TriggersEnable, and TriggersReset functions.
+ *
+ * @return False (0) if triggers should be suppressed; True (1) otherwise
+ *
+ * @global $$~DISABLETRIGGERS (deprecated)
+ * @global $$~TRIGGERS_DISABLE
+ *
+ * @history 2010-12-12 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Created
+ * @history 2010-12-13 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Using name
+ * suggested in FileMakerStandards.org discussion.
+ * @history 2011-02-09 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Adopting
+ * different variable names.
+ * @history 2013-04-08 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Adding backwards
+ * compatibility with older variable names.
+ *
+ * @see http://filemakerstandards.org/display/bp/Suppressible+Triggered+Scripts
+ ******************************************************************************/
+
+not (
+       $$~TRIGGERS_DISABLE
+       or $$~DISABLETRIGGERS
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"81\" functionArity=\"0\" visible=\"True\" parameters=\"\" name=\"TriggersAreDisabled\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*******************************************************************************
+ * TriggersAreDisabled
+ * Checks a global variable to identify whether or not script triggers should be
+ * allowed to run. This function is best used in concert with the
+ * TriggersDisable, TriggersEnable, and TriggersReset functions.
+ *
+ * @return True (1) if triggers should be suppressed; False (0) otherwise
+ *
+ * @global $$~DISABLETRIGGERS (deprecated)
+ * @global $$~TRIGGERS_DISABLE
+ *
+ * @history 2014-07-02 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Created
+ *
+ * @see http://filemakerstandards.org/display/bp/Suppressible+Triggered+Scripts
+ ******************************************************************************/
+
+$$~TRIGGERS_DISABLE
+or $$~DISABLETRIGGERS]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"82\" functionArity=\"0\" visible=\"True\" parameters=\"\" name=\"TriggersDisable\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*******************************************************************************
+ * TriggersDisable
+ * Sets global variables to indicate that the current script is suppressing
+ * triggers. This function must be called from the context of a script;
+ * otherwise, it will not suppress triggers, and it will return False. In order
+ * to be suppressed, a script called via trigger should use the
+ * TriggersAreActive or TriggersAreDisabled function to decide whether or not to
+ * run.
+ *
+ * @return True (1) if called from the context of a script, and therefore
+ * triggers have been suppressed; False (0) otherwise.
+ *
+ * @global $$~DISABLETRIGGERS (deprecated)
+ * @global $$~TRIGGERS_DISABLE
+ * @global $$~TRIGGERS_SCRIPTS
+ * @global $~triggers_disableKey
+ *
+ * @history 2010-12-12 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Created
+ * @history 2010-12-13 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Using names
+ * suggested at filemakerstandards.org.
+ * @history 2011-02-09 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Adopting
+ * different variable names.
+ * @history 2013-03-25 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Making the
+ * function robust to sub-scripts that disabled triggers without re-enabling
+ * them.
+ * @history 2013-04-08 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Adding older
+ * variable names for backwards compatibility.
+ *
+ * @see http://filemakerstandards.org/display/bp/Suppressible+Triggered+Scripts
+ ******************************************************************************/
+
+Let ( [
+       _scriptName = Get ( ScriptName ) ;
+       _scriptIsRunning = not IsEmpty ( Get ( ScriptName ) ) ;
+       _disableIsRunning = not IsEmpty ( $~triggers_disableKey ) ;
+       $~triggers_disableKey =
+               Case (
+                       _disableIsRunning ; $~triggers_disableKey ;
+                       _scriptIsRunning ; Get ( UUID )
+               ) ;
+       $$~TRIGGERS_SCRIPTS =
+               If ( _scriptIsRunning and not _disableIsRunning ;
+                       _scriptName
+                       &amp; Char ( 9 )    // tab
+                       &amp; $~triggers_disableKey
+                       &amp; ¶
+                       &amp; $$~TRIGGERS_SCRIPTS ;
+               /* Else */
+                       $$~TRIGGERS_SCRIPTS
+               ) ;
+       $$~TRIGGERS_DISABLE =
+               If ( _scriptIsRunning ; True ; /* Else */ $$~TRIGGERS_DISABLE ) ;
+       $$~DISABLETRIGGERS = $$~TRIGGERS_DISABLE
+] ;
+       _scriptIsRunning
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"83\" functionArity=\"0\" visible=\"True\" parameters=\"\" name=\"TriggersEnable\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*******************************************************************************
+ * TriggersEnable
+ * Sets global variables to indicate that the current script is no longer
+ * suppressing triggers. This function will also turn off trigger suppression
+ * altogether if there are no other scripts suppressing triggers. In order to be
+ * suppressed, a script called via trigger should use the TriggersAreActive or
+ * TriggersAreDisabled function to decide whether or not to run.
+ *
+ * This function should *always* be used in pairs with the TriggersDisable
+ * function.
+ *
+ * @global $$~DISABLETRIGGERS (deprecated)
+ * @global $$~TRIGGERS_DISABLE
+ * @global $$~TRIGGERS_SCRIPTS
+ * @global $~triggers_disableKey
+ *
+ * @history 2010-12-12 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Created
+ * @history 2010-12-13 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Using names
+ * suggested at FileMakerStandards.org.
+ * @history 2011-02-09 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Adopting
+ * different variable names.
+ * @history 2013-03-25 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Making the
+ * function robust to sub-scripts that disabled triggers without re-enabling
+ * them.
+ * @history 2013-04-08 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Adding older
+ * variable names for backwards compatibility.
+ *
+ * @see http://filemakerstandards.org/display/bp/Suppressible+Triggered+Scripts
+ ******************************************************************************/
+
+If ( not IsEmpty ( $~triggers_disableKey ) ;
+       Let ( [
+               _scriptsLength = Length ( $$~TRIGGERS_SCRIPTS ) ;
+               _scriptPosition =
+                       Position (
+                               $$~TRIGGERS_SCRIPTS ;
+                               Char ( 9 ) /* tab */ &amp; $~triggers_disableKey &amp; ¶ ;
+                               _scriptsLength ;
+                               -1
+                       ) ;
+               _breakPosition =
+                       If ( _scriptPosition &gt; 0 ;
+                               Position ( $$~TRIGGERS_SCRIPTS ; ¶ ; _scriptPosition ; 1 ) ;
+                               /* Else */ 0
+                       ) ;
+               $$~TRIGGERS_SCRIPTS =
+                       Right ( $$~TRIGGERS_SCRIPTS ; _scriptsLength - _breakPosition ) ;
+               $$~TRIGGERS_DISABLE =
+                       If ( not IsEmpty ( $$~TRIGGERS_SCRIPTS ) and $$~TRIGGERS_DISABLE ;
+                               True ;
+                               /* Else */ \"\"
+                       ) ;
+               $$~DISABLETRIGGERS = $$~TRIGGERS_DISABLE ;
+               $~triggers_disableKey = \"\"
+       ] ;
+               \"\"
+       )
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;CustomFunction id=\"84\" functionArity=\"0\" visible=\"True\" parameters=\"\" name=\"TriggersReset\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/*******************************************************************************
+ * TriggersReset
+ * Sets global variables to indicate that script triggers should be allowed to
+ * run, regardless of any persisting instructions to the contrary from any
+ * script.
+ *
+ * This may be useful to recover from a situation where a script forgot to call
+ * TriggersEnable at the end of operation. In order to be suppressed, a script
+ * called via trigger should use the TriggersAreActive function to decide
+ * whether or not to run.
+ *
+ * @global $$~DISABLETRIGGERS (deprecated)
+ * @global $$~TRIGGERS_DISABLE
+ * @global $$~TRIGGERS_SCRIPTS
+ * @global $~triggers_disableKey
+ *
+ * @history 2010-12-12 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Created
+ * @history 2010-12-13 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Using names
+ * suggested at FileMakerStandards.org.
+ * @history 2011-02-09 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Adopting
+ * different variable names.
+ * @history 2013-03-25 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Making the
+ * function robust to sub-scripts that disabled triggers without re-enabling
+ * them.
+ * @history 2013-04-08 - Jeremy Bante &lt;http://scr.im/fugue&gt; - Adding older
+ * variable names for backwards compatibility.
+ *
+ * @see http://filemakerstandards.org/display/bp/Suppressible+Triggered+Scripts
+ ******************************************************************************/
+
+Let ( [
+       $$~TRIGGERS_SCRIPTS             = \"\" ;
+       $$~TRIGGERS_DISABLE             = \"\" ;
+       $$~DISABLETRIGGERS              = \"\" ;
+       $~triggers_disableKey   = \"\"
+] ;
+       \"\"
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>988FC090-5020-41E3-8A44-D309D79BA95D</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>cfuuid</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-08-23T19:26:39Z</date>
+			<key>label</key>
+			<string>cf UUIDs</string>
+			<key>modificationDate</key>
+			<date>2018-09-08T20:42:42Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;CustomFunction id=\"31\" functionArity=\"0\" visible=\"True\" parameters=\"\" name=\"UUIDRandom\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/**
+ * ======================================
+ * UUIDRandom
+ *
+ * PURPOSE:
+ * Creates a numeric universally unique identifier suitable for use as a primary
+ * key in FileMaker number fields. The UUID is composed almost entirely of
+ * random digits. This may be useful in some situations to preserve the
+ * anonymity of the conditions that generated the UUID. The values returned by
+ * this and related functions have a one-to-one correspondence with UUIDs
+ * following the RFC 4122 standard - all values in the format generated by this
+ * function can be converted to RFC 4122, and visa-versa.
+ *
+ * RETURNS:
+ * A 41-digit delimited number of the form:
+ * v-r-nnnnnnnnnnnn-nnnnnnn-nnnnn@nnnnnnnnnnnnnnn
+ * The sections of the UUID correspond to:
+ * v: A UUID version (type) number
+ * r: A variant code reserved by the RFC 4122 standard
+ * n: Random digits, within certain bounds for compatibility with RFC 4122
+ *
+ * PARAMETERS: none
+ *
+ * DEPENDENCIES: none
+ *
+ * NOTES:
+ * For most practical purposes, FileMaker will ignore the text delimiters in
+ * values returned by this function.
+ *
+ * These functions generates UUIDs that are meaningfully sortable. Values sort
+ * by version, then creation order, then node (creation device).
+ *
+ * This function creates a (decimal) numeric UUID, which has performance
+ * advantages for file size and find speed in FileMaker. The value can be
+ * converted to RFC 4122 canonical form (hexadecimal) with the
+ * UUIDGetAsRFC4122 function.
+ *
+ * RELEASE: 2011-02-02
+ *
+ * REFERENCES:
+ * Key values Best Practice: http://filemakerstandards.org/pages/viewpage.action?pageId=557386
+ * RFC 4122 standard UUID specification: http://tools.ietf.org/html/rfc4122
+ * UUIDGetAsRFC4122: http://www.briandunning.com/cf/1221
+ * UUIDGetAsUUID: http://www.briandunning.com/cf/1273
+ * UUIDGetNICAddress: http://www.briandunning.com/cf/1222
+ * UUIDGetSeconds: http://www.briandunning.com/cf/1223
+ * UUIDNew: http://www.briandunning.com/cf/1220
+ * UUIDRandom: http://www.briandunning.com/cf/1246
+ * ======================================
+ */
+
+// v-r-mmm mmm mmm mmm-sss ssss-ccccc-nnnnn nnnnn nnnnn
+\"4-2-\" // version and reserved variant code
+&amp; Right ( \"000000000000\" &amp; Floor ( Random * 165208454460 ) ; 12 ) &amp; \"-\"
+&amp; Right ( Random ; 7 ) &amp; \"-\"
+&amp; Right ( \"00000\" &amp; Floor ( Random * 16384 ) ; 5 ) &amp; \"-\"
+&amp; Right ( \"000000000000000\" &amp; Floor ( Random * 281474976710656 ) ; 15 )]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>3A6D99D7-79E3-4825-918D-40DBD711B5A7</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>cfresult</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-08-23T19:26:39Z</date>
+			<key>label</key>
+			<string>cf Result</string>
+			<key>modificationDate</key>
+			<date>2018-10-23T22:53:08Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+&lt;CustomFunction id=\"5\" functionArity=\"2\" visible=\"True\" parameters=\"errorObject;data\" name=\"Result\"&gt;
+&lt;Calculation&gt;
+&lt;![CDATA[/**
+ * Creates a result object containing an error and a data object.
+ *
+ * @param {object} [errorObject] optional error object to include
+ * @param {string|object} [dataObject] optional extra data you want to return. Likely in json format, but not required.
+ *
+ * @returns {object}
+ *
+ * @history 2018-10-21 Joshua Willing  jwillinghalpern@gmail.com, created
+ *
+ */
+
+Let ([
+       ~result = \"\";
+       ~result = If ( Error.IsError ( errorObject ) ; JSONSetElement ( ~result ; \"error\" ; errorObject ; JSONObject ) ; ~result ) ;
+       ~leftChar = Left ( data ; 1 ) ;
+       ~dataType = Case ( ~leftChar = \"[\" ; JSONArray ; ~leftChar = \"{\" ; JSONObject ; JSONString ) ;
+       ~dataType = If ( Left ( JSONFormatElements ( data ) ; 1 ) = \"?\" ; JSONString ; ~dataType ) ;
+       ~result = If ( not IsEmpty ( data ) ; JSONSetElement ( ~result ; \"data\" ; data ; ~dataType ) ; ~result )
+];
+       ~result
+)]]&gt;
+&lt;/Calculation&gt;
+&lt;/CustomFunction&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>E9A392BF-0A69-4DC0-9FA0-5A5A22851DC6</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>cfwebviewerdiff</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-08-23T19:26:39Z</date>
+			<key>label</key>
+			<string>cf Webviewer Diff</string>
+			<key>modificationDate</key>
+			<date>2019-01-11T00:20:14Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+	&lt;CustomFunction id=\"58\" functionArity=\"2\" visible=\"True\" parameters=\"~textFrom;~textTo\" name=\"WebViewerDiff\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/* WebViewerDiff ( ~textFrom ; ~textTo )
+
+PURPOSE:
+Create web viewer that shows the transformation of ~textFrom into ~textTo.
+
+PARAMETERS:
+~textFrom (text) older version of text
+~textTo (text) newer version of text
+
+RETURNS:
+(text) suitable for using as the source for a web viewer
+
+DEPENDENCIES:
+none
+
+REVISIONS:
+Idea by Nicholas Orr http://www.goya.com.au/blog/performing-diff-comparison-2-text-fields-filemaker
+2012-FEB-22	- Dan Smith dansmith65@gmail.com
+	- turned into custom function
+	- updated Diff Match and Patch code
+	- added prettyHtml function
+	- use &lt;xmp&gt; tag instead of &lt;input&gt;, which resulted in it working with all characters in the text (like quotes, for example)
+####################################################################################################*/
+
+\"data:text/html, &lt;html&gt;¶
+&lt;head&gt;¶
+&lt;style type=\\\"text/css\\\"&gt;¶
+	body{¶
+		font-size:11px;¶
+		font-family:tahoma,sans-serif;¶
+		margin:0;¶
+		margin-left:3px;¶
+		border:0;¶
+		word-wrap: break-word;¶
+	}¶
+	.ins{¶
+		background:#A1F98A;¶
+	}¶
+	.del{¶
+		background:#EAA7A6;¶
+	}¶
+	.hidden{¶
+		display:none;¶
+	}¶
+	#nav{¶
+		position:fixed;¶
+		_position:absolute;¶
+		top:0px;¶
+		_top:expression(eval(document.body.scrollTop));¶
+		right:0px;¶
+		padding:0.5em; 1em;¶
+		background-color:lightskyblue;¶
+		width:100px;¶
+	}¶
+	#nav-prev{¶
+		float:left;¶
+	}¶
+	#nav-next{¶
+		float:right;¶
+	}¶
+	#highlighter{¶
+		background-color:yellow;¶
+		position:absolute;¶
+		width:100%;¶
+		z-index: -1;¶
+	}¶
+	#output{¶
+		display: inline;¶
+	}¶
+&lt;/style&gt;¶
+&lt;script language=\\\"JavaScript\\\"&gt;¶
+	//Diff Match and Patch    20120106    http://code.google.com/p/google-diff-match-patch/¶
+	((function(){function diff_match_patch(){this.Diff_Timeout=1;this.Diff_EditCost=4;this.Match_Threshold=0.5;this.Match_Distance=1E3;this.Patch_DeleteThreshold=0.5;this.Patch_Margin=4;this.Match_MaxBits=32}¶
+	diff_match_patch.prototype.diff_main=function(a,b,c,d){\\\"undefined\\\"==typeof d&amp;&amp;(d=0&gt;=this.Diff_Timeout?Number.MAX_VALUE:(new Date).getTime()+1E3*this.Diff_Timeout);if(null==a||null==b)throw Error(\\\"Null input. (diff_main)\\\");if(a==b)return a?[[0,a]]:[];\\\"undefined\\\"==typeof c&amp;&amp;(c=!0);var e=c,f=this.diff_commonPrefix(a,b),c=a.substring(0,f),a=a.substring(f),b=b.substring(f),f=this.diff_commonSuffix(a,b),g=a.substring(a.length-f),a=a.substring(0,a.length-f),b=b.substring(0,b.length-f),a=this.diff_compute_(a,¶
+	b,e,d);c&amp;&amp;a.unshift([0,c]);g&amp;&amp;a.push([0,g]);this.diff_cleanupMerge(a);return a};¶
+	diff_match_patch.prototype.diff_compute_=function(a,b,c,d){if(!a)return[[1,b]];if(!b)return[[-1,a]];var e=a.length&gt;b.length?a:b,f=a.length&gt;b.length?b:a,g=e.indexOf(f);if(-1!=g)return c=[[1,e.substring(0,g)],[0,f],[1,e.substring(g+f.length)]],a.length&gt;b.length&amp;&amp;(c[0][0]=c[2][0]=-1),c;if(1==f.length)return[[-1,a],[1,b]];return(e=this.diff_halfMatch_(a,b))?(f=e[0],a=e[1],g=e[2],b=e[3],e=e[4],f=this.diff_main(f,g,c,d),c=this.diff_main(a,b,c,d),f.concat([[0,e]],c)):c&amp;&amp;100&lt;a.length&amp;&amp;100&lt;b.length?this.diff_lineMode_(a,¶
+	b,d):this.diff_bisect_(a,b,d)};¶
+	diff_match_patch.prototype.diff_lineMode_=function(a,b,c){var d=this.diff_linesToChars_(a,b),a=d.chars1,b=d.chars2,d=d.lineArray,a=this.diff_main(a,b,!1,c);this.diff_charsToLines_(a,d);this.diff_cleanupSemantic(a);a.push([0,\\\"\\\"]);for(var e=d=b=0,f=\\\"\\\",g=\\\"\\\";b&lt;a.length;){switch(a[b][0]){case 1:e++;g+=a[b][1];break;case -1:d++;f+=a[b][1];break;case 0:if(1&lt;=d&amp;&amp;1&lt;=e){a.splice(b-d-e,d+e);b=b-d-e;d=this.diff_main(f,g,!1,c);for(e=d.length-1;0&lt;=e;e--)a.splice(b,0,d[e]);b+=d.length}d=e=0;g=f=\\\"\\\"}b++}a.pop();return a};¶
+	diff_match_patch.prototype.diff_bisect_=function(a,b,c){for(var d=a.length,e=b.length,f=Math.ceil((d+e)/2),g=f,h=2*f,j=Array(h),i=Array(h),k=0;k&lt;h;k++)j[k]=-1,i[k]=-1;j[g+1]=0;i[g+1]=0;for(var k=d-e,p=0!=k%2,q=0,s=0,o=0,v=0,u=0;u&lt;f&amp;&amp;!((new Date).getTime()&gt;c);u++){for(var n=-u+q;n&lt;=u-s;n+=2){var l=g+n,m;m=n==-u||n!=u&amp;&amp;j[l-1]&lt;j[l+1]?j[l+1]:j[l-1]+1;for(var r=m-n;m&lt;d&amp;&amp;r&lt;e&amp;&amp;a.charAt(m)==b.charAt(r);)m++,r++;j[l]=m;if(m&gt;d)s+=2;else if(r&gt;e)q+=2;else if(p&amp;&amp;(l=g+k-n,0&lt;=l&amp;&amp;l&lt;h&amp;&amp;-1!=i[l])){var t=d-i[l];if(m&gt;=¶
+	t)return this.diff_bisectSplit_(a,b,m,r,c)}}for(n=-u+o;n&lt;=u-v;n+=2){l=g+n;t=n==-u||n!=u&amp;&amp;i[l-1]&lt;i[l+1]?i[l+1]:i[l-1]+1;for(m=t-n;t&lt;d&amp;&amp;m&lt;e&amp;&amp;a.charAt(d-t-1)==b.charAt(e-m-1);)t++,m++;i[l]=t;if(t&gt;d)v+=2;else if(m&gt;e)o+=2;else if(!p&amp;&amp;(l=g+k-n,0&lt;=l&amp;&amp;l&lt;h&amp;&amp;-1!=j[l]&amp;&amp;(m=j[l],r=g+m-l,t=d-t,m&gt;=t)))return this.diff_bisectSplit_(a,b,m,r,c)}}return[[-1,a],[1,b]]};¶
+	diff_match_patch.prototype.diff_bisectSplit_=function(a,b,c,d,e){var f=a.substring(0,c),g=b.substring(0,d),a=a.substring(c),b=b.substring(d),f=this.diff_main(f,g,!1,e),e=this.diff_main(a,b,!1,e);return f.concat(e)};¶
+	diff_match_patch.prototype.diff_linesToChars_=function(a,b){function c(a){for(var b=\\\"\\\",c=0,f=-1,g=d.length;f&lt;a.length-1;){f=a.indexOf(\\\"
+\\\",c);-1==f&amp;&amp;(f=a.length-1);var q=a.substring(c,f+1),c=f+1;(e.hasOwnProperty?e.hasOwnProperty(q):void 0!==e[q])?b+=String.fromCharCode(e[q]):(b+=String.fromCharCode(g),e[q]=g,d[g++]=q)}return b}var d=[],e={};d[0]=\\\"\\\";var f=c(a),g=c(b);return{chars1:f,chars2:g,lineArray:d}};¶
+	diff_match_patch.prototype.diff_charsToLines_=function(a,b){for(var c=0;c&lt;a.length;c++){for(var d=a[c][1],e=[],f=0;f&lt;d.length;f++)e[f]=b[d.charCodeAt(f)];a[c][1]=e.join(\\\"\\\")}};diff_match_patch.prototype.diff_commonPrefix=function(a,b){if(!a||!b||a.charAt(0)!=b.charAt(0))return 0;for(var c=0,d=Math.min(a.length,b.length),e=d,f=0;c&lt;e;)a.substring(f,e)==b.substring(f,e)?f=c=e:d=e,e=Math.floor((d-c)/2+c);return e};¶
+	diff_match_patch.prototype.diff_commonSuffix=function(a,b){if(!a||!b||a.charAt(a.length-1)!=b.charAt(b.length-1))return 0;for(var c=0,d=Math.min(a.length,b.length),e=d,f=0;c&lt;e;)a.substring(a.length-e,a.length-f)==b.substring(b.length-e,b.length-f)?f=c=e:d=e,e=Math.floor((d-c)/2+c);return e};¶
+	diff_match_patch.prototype.diff_commonOverlap_=function(a,b){var c=a.length,d=b.length;if(0==c||0==d)return 0;c&gt;d?a=a.substring(c-d):c&lt;d&amp;&amp;(b=b.substring(0,c));c=Math.min(c,d);if(a==b)return c;for(var d=0,e=1;;){var f=a.substring(c-e),f=b.indexOf(f);if(-1==f)return d;e+=f;if(0==f||a.substring(c-e)==b.substring(0,e))d=e,e++}};¶
+	diff_match_patch.prototype.diff_halfMatch_=function(a,b){function c(a,b,c){for(var d=a.substring(c,c+Math.floor(a.length/4)),e=-1,g=\\\"\\\",h,j,n,l;-1!=(e=b.indexOf(d,e+1));){var m=f.diff_commonPrefix(a.substring(c),b.substring(e)),r=f.diff_commonSuffix(a.substring(0,c),b.substring(0,e));g.length&lt;r+m&amp;&amp;(g=b.substring(e-r,e)+b.substring(e,e+m),h=a.substring(0,c-r),j=a.substring(c+m),n=b.substring(0,e-r),l=b.substring(e+m))}return 2*g.length&gt;=a.length?[h,j,n,l,g]:null}if(0&gt;=this.Diff_Timeout)return null;¶
+	var d=a.length&gt;b.length?a:b,e=a.length&gt;b.length?b:a;if(4&gt;d.length||2*e.length&lt;d.length)return null;var f=this,g=c(d,e,Math.ceil(d.length/4)),d=c(d,e,Math.ceil(d.length/2)),h;if(!g&amp;&amp;!d)return null;h=d?g?g[4].length&gt;d[4].length?g:d:d:g;var j;a.length&gt;b.length?(g=h[0],d=h[1],e=h[2],j=h[3]):(e=h[0],j=h[1],g=h[2],d=h[3]);h=h[4];return[g,d,e,j,h]};¶
+	diff_match_patch.prototype.diff_cleanupSemantic=function(a){for(var b=!1,c=[],d=0,e=null,f=0,g=0,h=0,j=0,i=0;f&lt;a.length;)0==a[f][0]?(c[d++]=f,g=j,h=i,i=j=0,e=a[f][1]):(1==a[f][0]?j+=a[f][1].length:i+=a[f][1].length,e&amp;&amp;e.length&lt;=Math.max(g,h)&amp;&amp;e.length&lt;=Math.max(j,i)&amp;&amp;(a.splice(c[d-1],0,[-1,e]),a[c[d-1]+1][0]=1,d--,d--,f=0&lt;d?c[d-1]:-1,i=j=h=g=0,e=null,b=!0)),f++;b&amp;&amp;this.diff_cleanupMerge(a);this.diff_cleanupSemanticLossless(a);for(f=1;f&lt;a.length;){if(-1==a[f-1][0]&amp;&amp;1==a[f][0]){b=a[f-1][1];c=a[f][1];¶
+	d=this.diff_commonOverlap_(b,c);e=this.diff_commonOverlap_(c,b);if(d&gt;=e){if(d&gt;=b.length/2||d&gt;=c.length/2)a.splice(f,0,[0,c.substring(0,d)]),a[f-1][1]=b.substring(0,b.length-d),a[f+1][1]=c.substring(d),f++}else if(e&gt;=b.length/2||e&gt;=c.length/2)a.splice(f,0,[0,b.substring(0,e)]),a[f-1][0]=1,a[f-1][1]=c.substring(0,c.length-e),a[f+1][0]=-1,a[f+1][1]=b.substring(e),f++;f++}f++}};¶
+	diff_match_patch.prototype.diff_cleanupSemanticLossless=function(a){function b(a,b){if(!a||!b)return 6;var c=a.charAt(a.length-1),d=b.charAt(0),e=c.match(diff_match_patch.nonAlphaNumericRegex_),f=d.match(diff_match_patch.nonAlphaNumericRegex_),g=e&amp;&amp;c.match(diff_match_patch.whitespaceRegex_),h=f&amp;&amp;d.match(diff_match_patch.whitespaceRegex_),c=g&amp;&amp;c.match(diff_match_patch.linebreakRegex_),d=h&amp;&amp;d.match(diff_match_patch.linebreakRegex_),i=c&amp;&amp;a.match(diff_match_patch.blanklineEndRegex_),j=d&amp;&amp;b.match(diff_match_patch.blanklineStartRegex_);¶
+	return i||j?5:c||d?4:e&amp;&amp;!g&amp;&amp;h?3:g||h?2:e||f?1:0}for(var c=1;c&lt;a.length-1;){if(0==a[c-1][0]&amp;&amp;0==a[c+1][0]){var d=a[c-1][1],e=a[c][1],f=a[c+1][1],g=this.diff_commonSuffix(d,e);if(g)var h=e.substring(e.length-g),d=d.substring(0,d.length-g),e=h+e.substring(0,e.length-g),f=h+f;for(var g=d,h=e,j=f,i=b(d,e)+b(e,f);e.charAt(0)===f.charAt(0);){var d=d+e.charAt(0),e=e.substring(1)+f.charAt(0),f=f.substring(1),k=b(d,e)+b(e,f);k&gt;=i&amp;&amp;(i=k,g=d,h=e,j=f)}a[c-1][1]!=g&amp;&amp;(g?a[c-1][1]=g:(a.splice(c-1,1),c--),a[c][1]=¶
+	h,j?a[c+1][1]=j:(a.splice(c+1,1),c--))}c++}};diff_match_patch.nonAlphaNumericRegex_=/[^a-zA-Z0-9]/;diff_match_patch.whitespaceRegex_=/\\s/;diff_match_patch.linebreakRegex_=/[
+]/;diff_match_patch.blanklineEndRegex_=/
+
+?
+$/;diff_match_patch.blanklineStartRegex_=/^
+?
+
+?
+/;¶
+	diff_match_patch.prototype.diff_cleanupEfficiency=function(a){for(var b=!1,c=[],d=0,e=null,f=0,g=!1,h=!1,j=!1,i=!1;f&lt;a.length;){if(0==a[f][0])a[f][1].length&lt;this.Diff_EditCost&amp;&amp;(j||i)?(c[d++]=f,g=j,h=i,e=a[f][1]):(d=0,e=null),j=i=!1;else if(-1==a[f][0]?i=!0:j=!0,e&amp;&amp;(g&amp;&amp;h&amp;&amp;j&amp;&amp;i||e.length&lt;this.Diff_EditCost/2&amp;&amp;3==g+h+j+i))a.splice(c[d-1],0,[-1,e]),a[c[d-1]+1][0]=1,d--,e=null,g&amp;&amp;h?(j=i=!0,d=0):(d--,f=0&lt;d?c[d-1]:-1,j=i=!1),b=!0;f++}b&amp;&amp;this.diff_cleanupMerge(a)};¶
+	diff_match_patch.prototype.diff_cleanupMerge=function(a){a.push([0,\\\"\\\"]);for(var b=0,c=0,d=0,e=\\\"\\\",f=\\\"\\\",g;b&lt;a.length;)switch(a[b][0]){case 1:d++;f+=a[b][1];b++;break;case -1:c++;e+=a[b][1];b++;break;case 0:1&lt;c+d?(0!==c&amp;&amp;0!==d&amp;&amp;(g=this.diff_commonPrefix(f,e),0!==g&amp;&amp;(0&lt;b-c-d&amp;&amp;0==a[b-c-d-1][0]?a[b-c-d-1][1]+=f.substring(0,g):(a.splice(0,0,[0,f.substring(0,g)]),b++),f=f.substring(g),e=e.substring(g)),g=this.diff_commonSuffix(f,e),0!==g&amp;&amp;(a[b][1]=f.substring(f.length-g)+a[b][1],f=f.substring(0,f.length-¶
+	g),e=e.substring(0,e.length-g))),0===c?a.splice(b-d,c+d,[1,f]):0===d?a.splice(b-c,c+d,[-1,e]):a.splice(b-c-d,c+d,[-1,e],[1,f]),b=b-c-d+(c?1:0)+(d?1:0)+1):0!==b&amp;&amp;0==a[b-1][0]?(a[b-1][1]+=a[b][1],a.splice(b,1)):b++,c=d=0,f=e=\\\"\\\"}\\\"\\\"===a[a.length-1][1]&amp;&amp;a.pop();c=!1;for(b=1;b&lt;a.length-1;)0==a[b-1][0]&amp;&amp;0==a[b+1][0]&amp;&amp;(a[b][1].substring(a[b][1].length-a[b-1][1].length)==a[b-1][1]?(a[b][1]=a[b-1][1]+a[b][1].substring(0,a[b][1].length-a[b-1][1].length),a[b+1][1]=a[b-1][1]+a[b+1][1],a.splice(b-1,1),c=!0):a[b][1].substring(0,¶
+	a[b+1][1].length)==a[b+1][1]&amp;&amp;(a[b-1][1]+=a[b+1][1],a[b][1]=a[b][1].substring(a[b+1][1].length)+a[b+1][1],a.splice(b+1,1),c=!0)),b++;c&amp;&amp;this.diff_cleanupMerge(a)};diff_match_patch.prototype.diff_xIndex=function(a,b){var c=0,d=0,e=0,f=0,g;for(g=0;g&lt;a.length;g++){1!==a[g][0]&amp;&amp;(c+=a[g][1].length);-1!==a[g][0]&amp;&amp;(d+=a[g][1].length);if(c&gt;b)break;e=c;f=d}return a.length!=g&amp;&amp;-1===a[g][0]?f:f+(b-e)};¶
+	diff_match_patch.prototype.diff_prettyHtml=function(a){for(var b=[],c=/&amp;/g,d=/&lt;/g,e=/&gt;/g,f=/
+/g,g=0;g&lt;a.length;g++){var h=a[g][0],j=a[g][1],j=j.replace(c,\\\"&amp;amp;\\\").replace(d,\\\"&amp;lt;\\\").replace(e,\\\"&amp;gt;\\\").replace(f,\\\"&amp;para;&lt;br&gt;\\\");switch(h){case 1:b[g]='&lt;ins style=\\\"background:#e6ffe6;\\\"&gt;'+j+\\\"&lt;/ins&gt;\\\";break;case -1:b[g]='&lt;del style=\\\"background:#ffe6e6;\\\"&gt;'+j+\\\"&lt;/del&gt;\\\";break;case 0:b[g]=\\\"&lt;span&gt;\\\"+j+\\\"&lt;/span&gt;\\\"}}return b.join(\\\"\\\")};¶
+	diff_match_patch.prototype.diff_text1=function(a){for(var b=[],c=0;c&lt;a.length;c++)1!==a[c][0]&amp;&amp;(b[c]=a[c][1]);return b.join(\\\"\\\")};diff_match_patch.prototype.diff_text2=function(a){for(var b=[],c=0;c&lt;a.length;c++)-1!==a[c][0]&amp;&amp;(b[c]=a[c][1]);return b.join(\\\"\\\")};diff_match_patch.prototype.diff_levenshtein=function(a){for(var b=0,c=0,d=0,e=0;e&lt;a.length;e++){var f=a[e][0],g=a[e][1];switch(f){case 1:c+=g.length;break;case -1:d+=g.length;break;case 0:b+=Math.max(c,d),d=c=0}}return b+=Math.max(c,d)};¶
+	diff_match_patch.prototype.diff_toDelta=function(a){for(var b=[],c=0;c&lt;a.length;c++)switch(a[c][0]){case 1:b[c]=\\\"+\\\"+encodeURI(a[c][1]);break;case -1:b[c]=\\\"-\\\"+a[c][1].length;break;case 0:b[c]=\\\"=\\\"+a[c][1].length}return b.join(\\\"	\\\").replace(/%20/g,\\\" \\\")};¶
+	diff_match_patch.prototype.diff_fromDelta=function(a,b){for(var c=[],d=0,e=0,f=b.split(/	   /g),g=0;g&lt;f.length;g++){var h=f[g].substring(1);switch(f[g].charAt(0)){case \\\"+\\\":try{c[d++]=[1,decodeURI(h)]}catch(j){throw Error(\\\"Illegal escape in diff_fromDelta: \\\"+h);}break;case \\\"-\\\":case \\\"=\\\":var i=parseInt(h,10);if(isNaN(i)||0&gt;i)throw Error(\\\"Invalid number in diff_fromDelta: \\\"+h);h=a.substring(e,e+=i);\\\"=\\\"==f[g].charAt(0)?c[d++]=[0,h]:c[d++]=[-1,h];break;default:if(f[g])throw Error(\\\"Invalid diff operation in diff_fromDelta: \\\"+¶
+	f[g]);}}if(e!=a.length)throw Error(\\\"Delta length (\\\"+e+\\\") does not equal source text length (\\\"+a.length+\\\").\\\");return c};diff_match_patch.prototype.match_main=function(a,b,c){if(null==a||null==b||null==c)throw Error(\\\"Null input. (match_main)\\\");c=Math.max(0,Math.min(c,a.length));return a==b?0:a.length?a.substring(c,c+b.length)==b?c:this.match_bitap_(a,b,c):-1};¶
+	diff_match_patch.prototype.match_bitap_=function(a,b,c){function d(a,d){var e=a/b.length,g=Math.abs(c-d);return!f.Match_Distance?g?1:e:e+g/f.Match_Distance}if(b.length&gt;this.Match_MaxBits)throw Error(\\\"Pattern too long for this browser.\\\");var e=this.match_alphabet_(b),f=this,g=this.Match_Threshold,h=a.indexOf(b,c);-1!=h&amp;&amp;(g=Math.min(d(0,h),g),h=a.lastIndexOf(b,c+b.length),-1!=h&amp;&amp;(g=Math.min(d(0,h),g)));for(var j=1&lt;&lt;b.length-1,h=-1,i,k,p=b.length+a.length,q,s=0;s&lt;b.length;s++){i=0;for(k=p;i&lt;k;)d(s,c+¶
+	k)&lt;=g?i=k:p=k,k=Math.floor((p-i)/2+i);p=k;i=Math.max(1,c-k+1);var o=Math.min(c+k,a.length)+b.length;k=Array(o+2);for(k[o+1]=(1&lt;&lt;s)-1;o&gt;=i;o--){var v=e[a.charAt(o-1)];k[o]=0===s?(k[o+1]&lt;&lt;1|1)&amp;v:(k[o+1]&lt;&lt;1|1)&amp;v|(q[o+1]|q[o])&lt;&lt;1|1|q[o+1];if(k[o]&amp;j&amp;&amp;(v=d(s,o-1),v&lt;=g))if(g=v,h=o-1,h&gt;c)i=Math.max(1,2*c-h);else break}if(d(s+1,c)&gt;g)break;q=k}return h};¶
+	diff_match_patch.prototype.match_alphabet_=function(a){for(var b={},c=0;c&lt;a.length;c++)b[a.charAt(c)]=0;for(c=0;c&lt;a.length;c++)b[a.charAt(c)]|=1&lt;&lt;a.length-c-1;return b};¶
+	diff_match_patch.prototype.patch_addContext_=function(a,b){if(0!=b.length){for(var c=b.substring(a.start2,a.start2+a.length1),d=0;b.indexOf(c)!=b.lastIndexOf(c)&amp;&amp;c.length&lt;this.Match_MaxBits-this.Patch_Margin-this.Patch_Margin;)d+=this.Patch_Margin,c=b.substring(a.start2-d,a.start2+a.length1+d);d+=this.Patch_Margin;(c=b.substring(a.start2-d,a.start2))&amp;&amp;a.diffs.unshift([0,c]);(d=b.substring(a.start2+a.length1,a.start2+a.length1+d))&amp;&amp;a.diffs.push([0,d]);a.start1-=c.length;a.start2-=c.length;a.length1+=¶
+	c.length+d.length;a.length2+=c.length+d.length}};¶
+	diff_match_patch.prototype.patch_make=function(a,b,c){var d;if(\\\"string\\\"==typeof a&amp;&amp;\\\"string\\\"==typeof b&amp;&amp;\\\"undefined\\\"==typeof c)d=a,b=this.diff_main(d,b,!0),2&lt;b.length&amp;&amp;(this.diff_cleanupSemantic(b),this.diff_cleanupEfficiency(b));else if(a&amp;&amp;\\\"object\\\"==typeof a&amp;&amp;\\\"undefined\\\"==typeof b&amp;&amp;\\\"undefined\\\"==typeof c)b=a,d=this.diff_text1(b);else if(\\\"string\\\"==typeof a&amp;&amp;b&amp;&amp;\\\"object\\\"==typeof b&amp;&amp;\\\"undefined\\\"==typeof c)d=a;else if(\\\"string\\\"==typeof a&amp;&amp;\\\"string\\\"==typeof b&amp;&amp;c&amp;&amp;\\\"object\\\"==typeof c)d=a,b=c;else throw Error(\\\"Unknown call format to patch_make.\\\");¶
+	if(0===b.length)return[];for(var c=[],a=new diff_match_patch.patch_obj,e=0,f=0,g=0,h=d,j=0;j&lt;b.length;j++){var i=b[j][0],k=b[j][1];if(!e&amp;&amp;0!==i)a.start1=f,a.start2=g;switch(i){case 1:a.diffs[e++]=b[j];a.length2+=k.length;d=d.substring(0,g)+k+d.substring(g);break;case -1:a.length1+=k.length;a.diffs[e++]=b[j];d=d.substring(0,g)+d.substring(g+k.length);break;case 0:k.length&lt;=2*this.Patch_Margin&amp;&amp;e&amp;&amp;b.length!=j+1?(a.diffs[e++]=b[j],a.length1+=k.length,a.length2+=k.length):k.length&gt;=2*this.Patch_Margin&amp;&amp;¶
+	e&amp;&amp;(this.patch_addContext_(a,h),c.push(a),a=new diff_match_patch.patch_obj,e=0,h=d,f=g)}1!==i&amp;&amp;(f+=k.length);-1!==i&amp;&amp;(g+=k.length)}e&amp;&amp;(this.patch_addContext_(a,h),c.push(a));return c};diff_match_patch.prototype.patch_deepCopy=function(a){for(var b=[],c=0;c&lt;a.length;c++){var d=a[c],e=new diff_match_patch.patch_obj;e.diffs=[];for(var f=0;f&lt;d.diffs.length;f++)e.diffs[f]=d.diffs[f].slice();e.start1=d.start1;e.start2=d.start2;e.length1=d.length1;e.length2=d.length2;b[c]=e}return b};¶
+	diff_match_patch.prototype.patch_apply=function(a,b){if(0==a.length)return[b,[]];var a=this.patch_deepCopy(a),c=this.patch_addPadding(a),b=c+b+c;this.patch_splitMax(a);for(var d=0,e=[],f=0;f&lt;a.length;f++){var g=a[f].start2+d,h=this.diff_text1(a[f].diffs),j,i=-1;if(h.length&gt;this.Match_MaxBits){if(j=this.match_main(b,h.substring(0,this.Match_MaxBits),g),-1!=j&amp;&amp;(i=this.match_main(b,h.substring(h.length-this.Match_MaxBits),g+h.length-this.Match_MaxBits),-1==i||j&gt;=i))j=-1}else j=this.match_main(b,h,g);¶
+	if(-1==j)e[f]=!1,d-=a[f].length2-a[f].length1;else if(e[f]=!0,d=j-g,g=-1==i?b.substring(j,j+h.length):b.substring(j,i+this.Match_MaxBits),h==g)b=b.substring(0,j)+this.diff_text2(a[f].diffs)+b.substring(j+h.length);else if(g=this.diff_main(h,g,!1),h.length&gt;this.Match_MaxBits&amp;&amp;this.diff_levenshtein(g)/h.length&gt;this.Patch_DeleteThreshold)e[f]=!1;else{this.diff_cleanupSemanticLossless(g);for(var h=0,k,i=0;i&lt;a[f].diffs.length;i++){var p=a[f].diffs[i];0!==p[0]&amp;&amp;(k=this.diff_xIndex(g,h));1===p[0]?b=b.substring(0,¶
+	j+k)+p[1]+b.substring(j+k):-1===p[0]&amp;&amp;(b=b.substring(0,j+k)+b.substring(j+this.diff_xIndex(g,h+p[1].length)));-1!==p[0]&amp;&amp;(h+=p[1].length)}}}b=b.substring(c.length,b.length-c.length);return[b,e]};¶
+	diff_match_patch.prototype.patch_addPadding=function(a){for(var b=this.Patch_Margin,c=\\\"\\\",d=1;d&lt;=b;d++)c+=String.fromCharCode(d);for(d=0;d&lt;a.length;d++)a[d].start1+=b,a[d].start2+=b;var d=a[0],e=d.diffs;if(0==e.length||0!=e[0][0])e.unshift([0,c]),d.start1-=b,d.start2-=b,d.length1+=b,d.length2+=b;else if(b&gt;e[0][1].length){var f=b-e[0][1].length;e[0][1]=c.substring(e[0][1].length)+e[0][1];d.start1-=f;d.start2-=f;d.length1+=f;d.length2+=f}d=a[a.length-1];e=d.diffs;0==e.length||0!=e[e.length-1][0]?(e.push([0,¶
+	c]),d.length1+=b,d.length2+=b):b&gt;e[e.length-1][1].length&amp;&amp;(f=b-e[e.length-1][1].length,e[e.length-1][1]+=c.substring(0,f),d.length1+=f,d.length2+=f);return c};¶
+	diff_match_patch.prototype.patch_splitMax=function(a){for(var b=this.Match_MaxBits,c=0;c&lt;a.length;c++)if(!(a[c].length1&lt;=b)){var d=a[c];a.splice(c--,1);for(var e=d.start1,f=d.start2,g=\\\"\\\";0!==d.diffs.length;){var h=new diff_match_patch.patch_obj,j=!0;h.start1=e-g.length;h.start2=f-g.length;if(\\\"\\\"!==g)h.length1=h.length2=g.length,h.diffs.push([0,g]);for(;0!==d.diffs.length&amp;&amp;h.length1&lt;b-this.Patch_Margin;){var g=d.diffs[0][0],i=d.diffs[0][1];1===g?(h.length2+=i.length,f+=i.length,h.diffs.push(d.diffs.shift()),¶
+	j=!1):-1===g&amp;&amp;1==h.diffs.length&amp;&amp;0==h.diffs[0][0]&amp;&amp;i.length&gt;2*b?(h.length1+=i.length,e+=i.length,j=!1,h.diffs.push([g,i]),d.diffs.shift()):(i=i.substring(0,b-h.length1-this.Patch_Margin),h.length1+=i.length,e+=i.length,0===g?(h.length2+=i.length,f+=i.length):j=!1,h.diffs.push([g,i]),i==d.diffs[0][1]?d.diffs.shift():d.diffs[0][1]=d.diffs[0][1].substring(i.length))}g=this.diff_text2(h.diffs);g=g.substring(g.length-this.Patch_Margin);i=this.diff_text1(d.diffs).substring(0,this.Patch_Margin);\\\"\\\"!==i&amp;&amp;¶
+	(h.length1+=i.length,h.length2+=i.length,0!==h.diffs.length&amp;&amp;0===h.diffs[h.diffs.length-1][0]?h.diffs[h.diffs.length-1][1]+=i:h.diffs.push([0,i]));j||a.splice(++c,0,h)}}};diff_match_patch.prototype.patch_toText=function(a){for(var b=[],c=0;c&lt;a.length;c++)b[c]=a[c];return b.join(\\\"\\\")};¶
+	diff_match_patch.prototype.patch_fromText=function(a){var b=[];if(!a)return b;for(var a=a.split(\\\"
+\\\"),c=0,d=/^@@ -(\\d+),?(\\d*) \\+(\\d+),?(\\d*) @@$/;c&lt;a.length;){var e=a[c].match(d);if(!e)throw Error(\\\"Invalid patch string: \\\"+a[c]);var f=new diff_match_patch.patch_obj;b.push(f);f.start1=parseInt(e[1],10);\\\"\\\"===e[2]?(f.start1--,f.length1=1):\\\"0\\\"==e[2]?f.length1=0:(f.start1--,f.length1=parseInt(e[2],10));f.start2=parseInt(e[3],10);\\\"\\\"===e[4]?(f.start2--,f.length2=1):\\\"0\\\"==e[4]?f.length2=0:(f.start2--,f.length2=¶
+	parseInt(e[4],10));for(c++;c&lt;a.length;){e=a[c].charAt(0);try{var g=decodeURI(a[c].substring(1))}catch(h){throw Error(\\\"Illegal escape in patch_fromText: \\\"+g);}if(\\\"-\\\"==e)f.diffs.push([-1,g]);else if(\\\"+\\\"==e)f.diffs.push([1,g]);else if(\\\" \\\"==e)f.diffs.push([0,g]);else if(\\\"@\\\"==e)break;else if(\\\"\\\"!==e)throw Error('Invalid patch mode \\\"'+e+'\\\" in: '+g);c++}}return b};diff_match_patch.patch_obj=function(){this.diffs=[];this.start2=this.start1=null;this.length2=this.length1=0};¶
+	diff_match_patch.patch_obj.prototype.toString=function(){var a,b;a=0===this.length1?this.start1+\\\",0\\\":1==this.length1?this.start1+1:this.start1+1+\\\",\\\"+this.length1;b=0===this.length2?this.start2+\\\",0\\\":1==this.length2?this.start2+1:this.start2+1+\\\",\\\"+this.length2;a=[\\\"@@ -\\\"+a+\\\" +\\\"+b+\\\" @@
+\\\"];var c;for(b=0;b&lt;this.diffs.length;b++){switch(this.diffs[b][0]){case 1:c=\\\"+\\\";break;case -1:c=\\\"-\\\";break;case 0:c=\\\" \\\"}a[b+1]=c+encodeURI(this.diffs[b][1])+\\\"
+\\\"}return a.join(\\\"\\\").replace(/%20/g,\\\" \\\")};¶
+	this.diff_match_patch=diff_match_patch;this.DIFF_DELETE=-1;this.DIFF_INSERT=1;this.DIFF_EQUAL=0;})())¶
+&lt;/script&gt;¶
+&lt;script language=\\\"JavaScript\\\"&gt;¶
+	var diffCount = 0;¶
+	var lines, output, highlighter, diffElements;¶
+¶
+	function prettyHtml(diffs) {¶
+		var html = '';¶
+		for (var x = 0; x &lt; diffs.length; x++) {¶
+			var op = diffs[x][0];    // Operation (insert, delete, equal)¶
+			var data = diffs[x][1];  // Text of change.¶
+		var text = data.replace(/&amp;/g, '&amp;amp;').replace(/\\\"/g, '&amp;quot;').replace(/'/g, '&amp;#39;').replace(/&lt;/g, '&amp;lt;').replace(/&gt;/g, '&amp;gt;').replace(/
+|
+|
+/g, '&lt;br&gt;').replace(/  /g, '&amp;nbsp;&amp;nbsp;').replace(/	/g, '&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;');¶
+			switch (op) {¶
+				case DIFF_INSERT:¶
+					html += '&lt;ins class=\\\"ins diff\\\"&gt;' + text + '&lt;/ins&gt;';¶
+ 					++diffCount;¶
+					break;¶
+				case DIFF_DELETE:¶
+					html += '&lt;del class=\\\"del diff\\\"&gt;' + text + '&lt;/del&gt;';¶
+ 					++diffCount;¶
+					break;¶
+				case DIFF_EQUAL:¶
+					html += text;¶
+					break;¶
+			}¶
+		}¶
+		return html;¶
+	};¶
+¶
+	function createNav() {¶
+ 		var element = document.getElementById('nav');¶
+ 		var html = '';¶
+		if (diffCount == 0) {¶
+			html += 'NO CHANGES';¶
+		} else {¶
+			html += diffCount + ' differences';¶
+			html += '&lt;a href=\\\"#\\\" onclick=\\\"return prevDiff();\\\" id=\\\"nav-prev\\\"&gt;prev&lt;/a&gt;&lt;a href=\\\"#\\\" onclick=\\\"return nextDiff();\\\" id=\\\"nav-next\\\"&gt;next&lt;/a&gt;';¶
+		}¶
+		element.innerHTML = html;¶
+	};¶
+¶
+	function createDiff() {¶
+		var dmp = new diff_match_patch();¶
+		var textFrom = document.getElementById(\\\"textFrom\\\").innerHTML;¶
+		var textTo = document.getElementById(\\\"textTo\\\").innerHTML;¶
+		var diff = dmp.diff_main(textFrom, textTo);¶
+		dmp.diff_cleanupSemantic(diff);¶
+		output.innerHTML = prettyHtml(diff);¶
+		diffElements = document.getElementsByClassName('diff');¶
+	}¶
+¶
+	function nextDiff() {¶
+		var highlightTop = highlighter.offsetTop;¶
+		for (var i=0, max = diffElements.length; i &lt; max; i++){¶
+			var diffTop = diffElements[i].offsetTop;¶
+			var diffBottom = diffTop + diffElements[i].offsetHeight;¶
+			if (diffTop &gt; highlightTop){¶
+				// highlight the diff¶
+				highlighter.style.top = diffTop;¶
+				highlighter.style.height = diffBottom - diffTop;¶
+				// scroll top of diff to middle of screen¶
+				var y = diffTop - getScreenHeight() / 2 ;¶
+				window.scrollTo(0, y);¶
+				break;¶
+			}¶
+		}¶
+		return false;¶
+	}¶
+¶
+	function prevDiff() {¶
+		var highlightTop = highlighter.offsetTop;¶
+		for (var i=diffElements.length-1; i &gt; 0; i--){¶
+			var diffTop = diffElements[i].offsetTop;¶
+			var diffBottom = diffTop + diffElements[i].offsetHeight;¶
+			if (diffTop &lt; highlightTop){¶
+				// highlight the diff¶
+				highlighter.style.top = diffTop;¶
+				highlighter.style.height = diffBottom - diffTop;¶
+				// scroll top of diff to middle of screen¶
+				var y = diffTop - getScreenHeight() / 2 ;¶
+				window.scrollTo(0, y);¶
+				break;¶
+			}¶
+		}¶
+		return false;¶
+	}¶
+¶
+	function highlightRow(e) {¶
+		var event = e || window.event;¶
+¶
+		var origin = event.srcElement || event.target;¶
+		if (origin.id == 'nav-next' || origin.id == 'nav-prev') {¶
+			return;		// don't highlight row when user clicks on navigation¶
+		}¶
+¶
+		var y = event.clientY;¶
+¶
+		var scrollTop = getScrollTop();¶
+		y = y + scrollTop;¶
+¶
+		// this needs to be retrieved on every click because the 'top' value depends on the amount the window is scrolled¶
+		lines = output.getClientRects();¶
+¶
+		for (var i=0, max = lines.length; i &lt; max; i++){¶
+			var lineTop = lines[i].top + scrollTop;¶
+			var lineBottom = lines[i].bottom + scrollTop;¶
+			if (y &gt;= lineTop &amp;&amp; y &lt; lineBottom){¶
+				highlighter.style.top = lineTop;¶
+				highlighter.style.height = lineBottom - lineTop;¶
+				break;¶
+			}¶
+		}¶
+	}¶
+¶
+	function keepHighlightOnContent() {¶
+ 		var scrollTop = getScrollTop();¶
+		var contentBottom = output.getBoundingClientRect().bottom + scrollTop;¶
+		var highlightBottom = highlighter.offsetTop + highlighter.offsetHeight;¶
+		if (highlightBottom &gt; contentBottom){¶
+ 				highlighter.style.top = contentBottom - highlighter.offsetHeight;¶
+		}¶
+	}¶
+¶
+	function getScrollTop() {¶
+		var scrollTop;¶
+		if ('pageYOffset' in window) {  // all browsers, except IE before version 9¶
+			scrollTop = window.pageYOffset;¶
+		}¶
+		else {      // Internet Explorer before version 9¶
+			scrollTop = document.body.scrollTop;¶
+		}¶
+		return scrollTop;¶
+	}¶
+¶
+	function getScreenHeight() {¶
+		winH = 460;¶
+		if (document.body &amp;&amp; document.body.offsetHeight) {¶
+			winH = document.body.offsetHeight;¶
+		}¶
+		if (document.compatMode=='CSS1Compat' &amp;&amp;¶
+			document.documentElement &amp;&amp;¶
+			document.documentElement.offsetHeight ) {¶
+			winH = document.documentElement.offsetHeight;¶
+		}¶
+		if (window.innerWidth &amp;&amp; window.innerHeight) {¶
+			winH = window.innerHeight;¶
+		}¶
+		return winH;¶
+	}¶
+¶
+	function loadGetElementsByClassName() {¶
+		if (document.getElementsByClassName == undefined) {¶
+			document.getElementsByClassName = function(className)¶
+			{¶
+				var hasClassName = new RegExp(\\\"(?:^|\\\\s)\\\" + className + \\\"(?:$|\\\\s)\\\");¶
+				var allElements = document.getElementsByTagName('*');¶
+				var results = [];¶
+¶
+				var element;¶
+				for (var i = 0; (element = allElements[i]) != null; i++) {¶
+					var elementClass = element.className;¶
+					if (elementClass &amp;&amp; elementClass.indexOf(className) != -1 &amp;&amp; hasClassName.test(elementClass))¶
+						results.push(element);¶
+				}¶
+¶
+				return results;¶
+			}¶
+		}¶
+	}¶
+¶
+	function initialize() {¶
+ 		output = document.getElementById(\\\"output\\\");¶
+ 		highlighter = document.getElementById(\\\"highlighter\\\");¶
+		loadGetElementsByClassName();¶
+		createDiff();¶
+		createNav();¶
+		document.onclick = function () {highlightRow();};¶
+		window.onresize = function () {keepHighlightOnContent();};
+	}¶
+&lt;/script&gt;¶
+&lt;/head&gt;¶
+&lt;body onload=\\\"initialize();\\\"&gt;¶
+	&lt;div id=\\\"nav\\\"&gt;&lt;/div&gt;¶
+	&lt;div id=\\\"highlighter\\\"&gt;&lt;/div&gt;¶
+	&lt;xmp class=\\\"hidden\\\" id=\\\"textFrom\\\"&gt;\" &amp; Substitute ( ~textFrom ; [ \"&lt;/xmp&gt;\"; \"&lt; /xmp&gt;\" ] ) &amp; \"&lt;/xmp&gt;¶
+	&lt;xmp class=\\\"hidden\\\" id=\\\"textTo\\\"&gt;\" &amp; Substitute ( ~textTo ;  [ \"&lt;/xmp&gt;\"; \"&lt; /xmp&gt;\" ] ) &amp; \"&lt;/xmp&gt;¶
+	&lt;div id=\\\"output\\\"&gt;&lt;/div&gt;¶
+&lt;/body&gt;¶
+&lt;/html&gt;\"
+
+// escape the closing &lt;/xmp&gt; tag by adding a space to it should safely allow ~textFrom and ~textTo to include ALL characters (including this custom function!)]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>7122A5D8-E615-4C4D-9D0B-75ECEC009A05</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>cfvalidate</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-08-23T19:26:39Z</date>
+			<key>label</key>
+			<string>cf JSON Validate</string>
+			<key>modificationDate</key>
+			<date>2019-01-16T01:12:42Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+	&lt;CustomFunction id=\"1\" functionArity=\"1\" visible=\"True\" parameters=\"json\" name=\"JSON.Validate.This\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ *
+ * sets the JSON to validate into a known var
+ *
+ * @param {object} JSON 
+ * 
+ * @author Todd Geist, https://github.com/toddgeist
+ * @module JSON.Validate
+ * @see https://github.com/karbonfm/fm-json-validation
+ */
+
+Let( $JSON.Validate.This = json; \"\" )]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"2\" functionArity=\"1\" visible=\"True\" parameters=\"path\" name=\"JSON.Validate.Rule.IsRequired\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ *
+ * A rule that tests for a value at the path
+ *
+ * @param {string} path the path to the value to test
+ *
+ * @returnSuccess {string} \"\"  / nothing
+ * @returnError {object} JSON.Validate.Error an error
+ * 
+ * @author Todd Geist, https://github.com/toddgeist
+ * @module JSON.Validate
+ * @see https://github.com/karbonfm/fm-json-validation
+ *
+ */
+
+Let(
+[
+theItem = JSONGetElement( $JSON.Validate.This ; path  )
+];
+
+Case(
+	IsEmpty( theItem ); JSON.Validate._Error( path ; \"Required value is missing\"  ) ; 
+	\"\"
+)
+)]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"3\" functionArity=\"2\" visible=\"True\" parameters=\"path;theList\" name=\"JSON.Validate.Rule.IsOneOf\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ *
+ * A rule that test if a value is in a list
+ *
+ * @param {string} path the path to the value to test
+ * @param {string} theList carraige return deliminated list
+ *
+ * @returnSuccess {string} \"\"  / nothing
+ * @returnError {object} JSON.Validate.Error an error
+ * 
+ * @author Todd Geist, https://github.com/toddgeist
+ * @module JSON.Validate
+ * @see https://github.com/karbonfm/fm-json-validation
+ *
+ */
+
+
+Let(
+[
+theItem = JSONGetElement(  $JSON.Validate.This ; path  );
+passed =  FilterValues ( theList ; theItem ) = theItem &amp; \"¶\" 
+];
+
+If(
+	passed ; \"\" ; 
+	JSON.Validate._Error ( path ; \"Should be one of \" &amp; Substitute(theList; \"¶\"; \",\") &amp; \". Instead it was \" &amp; If(IsEmpty(theItem); \"EMPTY STRING\" ; theItem) )
+)
+
+)]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"4\" functionArity=\"1\" visible=\"True\" parameters=\"path\" name=\"JSON.Validate.Rule.IsNumeric\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ *
+ * A rule that tests for a valid numeric value at the path
+ *
+ * @param {string} path the path to the value to test
+ *
+ * @returnSuccess {string} \"\"  / nothing
+ * @returnError {object} JSON.Validate.Error an error
+ * 
+ * @author John Renfrew, https://github.com/rwu2359
+ * @module JSON.Validate
+ * @see https://github.com/karbonfm/fm-json-validation
+ * @history 2017-11-18, John Renfrew, created
+ *
+ */
+
+Let(
+[
+	theItem = JSONGetElement( $JSON.Validate.This ; path  ) ;
+	isNumeric = ( 
+		Let ( 
+			_it = Case ( 
+				Left ( theItem ; 3 ) = \"-0.\" ; Middle ( theItem ; 3 ; 999 ) ; 
+				Left ( theItem ; 2 ) = \"0.\" ; Middle ( theItem ; 2 ; 999 ) ; 
+				Left ( theItem ; 1 ) = \"-\" ; Middle ( theItem ; 2 ; 999 ) ; 
+				theItem 
+				) ; 
+			_it = Abs ( GetAsNumber ( Filter ( _it ; \"0123456789.,\") ) ) 
+		) 
+	)
+	//isNumeric = ( Let ( _it = Filter ( theItem ; \"0123456789.,\" ) ; Case ( Left ( _it ; 3 ) = \"-0.\" ; Middle ( theItem ; 3 ; 999) l Left ( _it ; 2 ) = \"0.\" ; Middle ( theItem ; 2 ; 999) ; theItem ) ) = Abs ( GetAsNumber ( theItem ) ) ) and GetAsNumber ( theItem ) = theItem
+	//test removes leading '0' before decimal point, as GetAsNumber only return .001 for numbers less than zero not 0.001
+];
+
+Case(
+	not isNumeric ; JSON.Validate._Error( path ; \"Required value is not numeric or in valid range\"  ) ; 
+	\"\"
+)
+)
+
+
+/*
+
+isNumeric = ( Let ( _it = Case ( left ( theItem ; 3 ) = \"-0.\" ; Middle ( theItem ; 3 ; 999 ) ; left ( theItem ; 2 ) = \"0.\" ; Middle ( theItem ; 2 ; 999 ) ; left ( theItem ; 3 ) = \"-\" ; Middle ( theItem ; 2 ; 999 ) ; theItem ) ) ; Filter ( _it ; \"0123456789.,\") = Abs ( GetAsNumber ( theItem ) ) )
+
+if left ( it ; 3 ) = \"-0.\" =&gt; Middle ( it ; 3 ; 999 )
+if left ( it ; 2 ) = \"0.\" =&gt; Middle ( it ; 2 ; 999 )
+if left ( it ; 1 ) = \"-\" =&gt; Middle ( it ; 2 ; 999 )
+else it = it
+
+// can now filter out '-'
+
+Filter ( it ; \"0123456789.,\") = Abs ( GetAsNumber ( it ))
+
+*/]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"5\" functionArity=\"1\" visible=\"True\" parameters=\"ListOfRules\" name=\"JSON.Validate.ApplyRules\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ *
+ * Applies a list of Rules to the JSON set by JSON.Validate.This()
+ *
+ * @param {string} ListOfRule the list of rules made with List(JSON.Validate.Rule.&lt;x&gt;)
+ *
+ * @returnSuccess {string} \"\"  / nothing
+ * @returnError {object} JSON.Validate.Error an error
+ * 
+ * @author Todd Geist, https://github.com/toddgeist
+ * @module JSON.Validate
+ * @see https://github.com/karbonfm/fm-json-validation
+ *
+ */
+
+
+Let(
+[
+formatted = JSONFormatElements($JSON.Validate.This);
+listOfErrors = ListOfRules;
+$JSON.Validate.This = \"\"
+];
+
+Case(
+   Left(formatted; 1)=\"?\" ; JSON.Validate._Error(\"\"; List(\"JSON To Validate is Invalid.\" ; formatted ) );
+   IsEmpty( listOfErrors) ; JSONSetElement( \"{}\"; \"errorCode\"; 0; JSONNumber ); // no error found so return no error
+
+  
+	Let(
+	[
+	ArrayOfErrors = \"[\" &amp; Substitute( listOfErrors ; \"¶\" ; \",\" ) &amp; \"]\" ;
+	error = JSONSetElement(\"{}\"; [\"errorCode\"; -2; JSONNumber]; [\"type\" ; \"JSON.Validate\"; JSONString] )
+	];
+	    JSONSetElement(error; \"errors \"; ArrayofErrors ; \"\" )
+	)
+
+
+)
+
+)]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"6\" functionArity=\"2\" visible=\"True\" parameters=\"path;message\" name=\"JSON.Validate._Error\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ *
+ * creates a JSON Validate error
+ *
+ * @param {object} JSON 
+ * 
+ * @returns {object} error
+ *
+ * @private
+ * @module JSON.Validate
+ * @see https://github.com/karbonfm/fm-json-validation
+ *
+ */
+
+
+
+JSONSetElement( \"{}\";
+[\"errorCode\"; -2 ; JSONNumber]; 
+[\"type\"; \"JSON.Validate\" ; JSONString]; 
+[\"descriptor\" ; message; JSONString];
+[\"path\" ; path; JSONString];
+[\"scriptName\" ; Get(ScriptName); JSONString]
+)]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>1E1636CF-333A-4542-B82E-82ABD14EC5C0</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>cfpath</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-08-23T19:26:39Z</date>
+			<key>label</key>
+			<string>cf Path</string>
+			<key>modificationDate</key>
+			<date>2019-01-19T08:29:11Z</date>
+			<key>plainText</key>
+			<string>set clip to "&lt;fmxmlsnippet type=\"FMObjectList\"&gt;
+	&lt;CustomFunction id=\"10\" functionArity=\"1\" visible=\"True\" parameters=\"fullPath\" name=\"~Path.Normalize\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ * =====================================
+ * ~Path.Normalize ( fullPath )
+ *
+ * RETURNS:
+ *		the standardized filepath
+ *
+ * PARAMETERS:
+ *		fullPath | the full filepath in OS, FM, or mixed format
+ *
+ * DEPENDENCIES: none
+ *
+ * HISTORY:
+ *		2018-12-27	Joshua Willing	jwillinghalpern@gmail.com
+ *			- Created
+ *			- Logic based on the Path module scripts created by Dan Smith
+ * =====================================
+ */
+If ( 
+	Left ( fullPath ; 7 ) = \"fmnet:/\" ; 
+	fullPath ; 
+	Let ([
+		/* path separator */
+		fullPath = Substitute ( fullPath ; \"\\\" ; \"/\"  ) ;
+
+		/* remove file* prefix, if any */
+		fullPath = Case ( 
+			Left ( fullPath ; 5 ) = \"file:\" ;
+				Right ( fullPath ; Length ( fullPath ) - 5 ) ;
+			Left ( fullPath ; 8 ) = \"filewin:\" or  Left ( fullPath ; 8 ) = \"filemac:\" ;
+				Right ( fullPath ; Length ( fullPath ) - 8 ) ;
+			// Else
+				fullPath 
+		);
+
+		/* on Mac, add \"/Volumes/\" if it doesn't exist */
+		fullPath = If ( 
+			Get ( SystemPlatform ) = 1 /* Mac */ and Left ( fullPath ; 9 ) ≠ \"/Volumes/\" ;
+				If (
+					Left ( fullPath ; 1 ) = \"/\" ;
+					\"/Volumes/\" &amp; Right ( fullPath ; Length ( fullPath ) - 1 );
+					\"/Volumes/\" &amp; fullPath 
+				) ;
+			// Else
+				fullPath
+		);
+
+		/* on Windows, prepend with forward slash, if it doesn't exist */
+		fullPath = If (
+			Get ( SystemPlatform ) = -2 /* Windows */ and Left ( fullPath ; 1 ) ≠ \"/\" ;
+				\"/\" &amp; fullPath;
+			// Else
+				fullPath
+			
+		);
+
+		/* never end with a path separator */
+		fullPath = If (
+			Right ( fullPath ; 1 ) = \"/\" ;
+				Left ( fullPath ; Length ( fullPath ) - 1 ) ;
+			// Else
+				fullPath
+		)
+	];
+		fullPath
+	)
+) // end if]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"11\" functionArity=\"1\" visible=\"True\" parameters=\"fullPath\" name=\"Path.OS\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ * =====================================
+ * Path.OS ( fullPath )
+ *
+ * RETURNS:
+ *		fullPath formatted as native OS path
+ *
+ * PARAMETERS:
+ *		fullPath | the full filepath in OS, FM, or mixed format
+ *
+ * DEPENDENCIES: 
+ * 		~Path.Normalize
+ *
+ * HISTORY:
+ *		2018-12-27	Joshua Willing	jwillinghalpern@gmail.com
+ *			- Created
+ *			- Logic based on the Path module scripts created by Dan Smith
+ * =====================================
+ */
+If ( 
+	Left ( fullPath ; 7 ) = \"fmnet:/\" ; 
+		\"?\" ; 
+	// Else
+		Let ([
+			/* normalize */
+			fullPath = ~Path.Normalize ( fullPath ) ;
+
+			/* adjust for Windows */
+			fullPath = If ( 
+				Get ( SystemPlatform ) = -2  ; /* Windows */
+					If ( 
+						// not a network path
+						Left ( $path ; 2 ) ≠ \"//\" ;
+							Substitute ( Right ( fullPath ; Length ( fullPath ) - 1 ) ; \"/\" ; \"\\\" ) ;
+						// Else
+							 Substitute ( fullPath ; \"/\" ; \"\\\" ) 
+					) ;
+				// Else
+					fullPath
+			)
+		];
+			fullPath
+		)
+) // end if
+]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"12\" functionArity=\"1\" visible=\"True\" parameters=\"fullPath\" name=\"Path.FM\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ * =====================================
+ * Path.FM ( fullPath )
+ *
+ * RETURNS:
+ *		fullPath formatted as FM path
+ *
+ * PARAMETERS:
+ *		fullPath | the full filepath in OS, FM, or mixed format
+ *
+ * DEPENDENCIES: 
+ * 		~Path.Normalize
+ *
+ * HISTORY:
+ *		2018-12-27	Joshua Willing	jwillinghalpern@gmail.com
+ *			- Created
+ *			- Logic based on the Path module scripts created by Dan Smith
+ * =====================================
+ */
+If ( 
+	Left ( fullPath ; 7 ) = \"fmnet:/\" ; 
+		fullPath ; 
+	// Else
+		Let ([
+			/* normalize */
+			fullPath = ~Path.Normalize ( fullPath ) ;
+
+			/* on Mac, remove \"/Volumes/\" */
+			fullPath = If (
+				Get ( SystemPlatform ) = 1 /* Mac */ and Left ( fullPath ; 9 ) = \"/Volumes/\" ;
+					Right ( fullPath ; Length ( fullPath ) - 8 ) ;
+				// Else
+					fullPath
+			);
+
+			/* prepend with \"file:\", which works the same as filewin: or filemac: (in my testing, at least) */
+			fullPath = \"file:\" &amp; fullPath
+		];
+			fullPath
+		)
+) // end if]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"13\" functionArity=\"1\" visible=\"True\" parameters=\"fullPath\" name=\"Path.FM.Parent\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ * =====================================
+ * Path.FM.Parent ( fullPath )
+ *
+ * RETURNS:
+ *		the parent folder of the fullPath as FM path
+ *
+ * PARAMETERS:
+ *		fullPath | the full filepath in OS, FM, or mixed format
+ *
+ * DEPENDENCIES: 
+ * 		Path.FM
+ *
+ * HISTORY:
+ *		2018-12-27	Joshua Willing	jwillinghalpern@gmail.com
+ *			- Created
+ *			- Logic based on the Path module scripts created by Dan Smith
+ * =====================================
+ */
+If (
+	IsEmpty ( Trim ( fullPath ) ) ; 
+	\"\" ;
+	Let ([
+		/* trim */
+		fullPath = Trim ( fullPath ) ;
+
+		/* convert to FM Path */
+		fullPath = Path.FM ( fullPath ) ;
+
+		/* remove last node */
+		~lastSeparator = Position ( fullPath ; \"/\" ; Length ( fullPath ) ; -1 ) ;
+		fullPath = 
+			If (
+				~lastSeparator = 0 ;
+					\"\" ; /* error: last separator not found */
+				// Else
+					Left ( fullPath ; ~lastSeparator - 1 )
+			) ;
+
+fullPath = fullPath
+	];
+		fullPath
+	)
+)]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"14\" functionArity=\"1\" visible=\"True\" parameters=\"fullPath\" name=\"Path.OS.Parent\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ * =====================================
+ * Path.OS.Parent ( fullPath )
+ *
+ * RETURNS:
+ *		the parent folder of the fullPath as native OS path
+ *
+ * PARAMETERS:
+ *		fullPath | the full filepath in OS, FM, or mixed format
+ *
+ * DEPENDENCIES: 
+ * 		Path.OS
+ *
+ * HISTORY:
+ *		2018-12-27	Joshua Willing	jwillinghalpern@gmail.com
+ *			- Created
+ *			- Logic based on the Path module scripts created by Dan Smith
+ * =====================================
+ */
+If (
+	IsEmpty ( Trim ( fullPath ) ) ; 
+	\"\" ;
+	Let ([
+		~sep = If ( Get ( SystemPlatform ) = -2 /* Windows */ ;  \"\\\" ;  \"/\" ) ;
+
+		/* trim */
+		fullPath = Trim ( fullPath ) ;
+
+		/* convert to OS Path */
+		fullPath = Path.OS ( fullPath ) ;
+
+		/* remove last node */
+		~lastSeparator = Position ( fullPath ; ~sep ; Length ( fullPath ) ; -1 ) ;
+		fullPath = 
+			If (
+				~lastSeparator = 0 ;
+					\"\" ; /* error: last separator not found */
+				// Else
+					Left ( fullPath ; ~lastSeparator - 1 )
+			)
+	];
+		fullPath
+	)
+)]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"15\" functionArity=\"1\" visible=\"True\" parameters=\"segments\" name=\"~Path.Combine\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ * =====================================
+ * ~Path.Combine ( segments )
+ *
+ * RETURNS:
+ *		Combines multiple values (nodes) into a single path string.
+ *
+ * PARAMETERS:
+ *		segments | a LIST of segments like: Get ( DesktopPath ) &amp;¶&amp; \"folder\" &amp;¶&amp; \"file.txt\"
+ *
+ * DEPENDENCIES: 
+ *
+ * HISTORY:
+ *		2018-12-27	Joshua Willing	jwillinghalpern@gmail.com
+ *			- Created
+ *			- Logic based on the Path module scripts created by Dan Smith. Adapted as a tail recursive function.
+ * =====================================
+ */
+Let ([
+	~sep = If ( Get ( SystemPlatform ) = -2 /* Windows */ ;  \"\\\" ;  \"/\" ) ;
+	~count = ValueCount ( segments );
+	
+	~segment = GetValue ( segments ; 1 ) ;
+	~segment2 = GetValue ( segments ; 2 ) ;
+	~leftChar = Left ( ~segment2 ; 1 ) ;
+	~segment2 = If ( 
+		~leftChar = \"/\" or ~leftChar = \"\\\" ;  
+			Right ( ~segment2 ; Length ( ~segment2 ) - 1 );
+		// Else
+			~segment2
+	);
+	/* remove trailing slash from segment 1 */
+	~rightChar = Right ( ~segment ; 1 );
+	~segment = If ( 
+		~rightChar = \"/\" or ~rightChar = \"\\\" ;  
+			Left ( ~segment ; Length ( ~segment ) - 1 );
+		// Else
+			~segment
+	);
+	/* remove trailing slash from segment 2 */
+	~rightChar = Right ( ~segment2 ; 1 );
+	~segment2 = If ( 
+		~rightChar = \"/\" or ~rightChar = \"\\\" ;  
+			Left ( ~segment2 ; Length ( ~segment2 ) - 1 );
+		// Else
+			~segment2
+	);	
+	~segment = ~segment &amp; ~sep &amp; ~segment2 
+];
+	Case ( 
+		~count &lt;= 1 ; 
+			segments ;
+		~count = 2 ;
+			~segment ;
+		// Else
+			~Path.Combine ( List ( ~segment ; RightValues ( segments ; ~count - 2 ) ) )
+)
+
+)]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"16\" functionArity=\"1\" visible=\"True\" parameters=\"segments\" name=\"Path.OS.Combine\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ * =====================================
+ * Path.OS.Combine ( segments )
+ *
+ * RETURNS:
+ *		Combines multiple values (nodes) into a single native OS path.
+ *
+ * PARAMETERS:
+ *		segments | a LIST of segments like: Get ( DesktopPath ) &amp;¶&amp; \"folder\" &amp;¶&amp; \"file.txt\"
+ *
+ * DEPENDENCIES: 
+ * 		~Path.Combine
+ *
+ * HISTORY:
+ *		2018-12-27	Joshua Willing	jwillinghalpern@gmail.com
+ *			- Created
+ *			- Logic based on the Path module scripts created by Dan Smith
+ * =====================================
+ */
+Path.OS ( ~Path.Combine ( segments ) )]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"17\" functionArity=\"1\" visible=\"True\" parameters=\"segments\" name=\"Path.FM.Combine\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ * =====================================
+ * Path.FM.Combine ( segments )
+ *
+ * RETURNS:
+ *		Combines multiple values (nodes) into a single FM path.
+ *
+ * PARAMETERS:
+ *		segments | a LIST of segments like: Get ( DesktopPath ) &amp;¶&amp; \"folder\" &amp;¶&amp; \"file.txt\"
+ *
+ * DEPENDENCIES: 
+ * 		~Path.Combine
+ *
+ * HISTORY:
+ *		2018-12-27	Joshua Willing	jwillinghalpern@gmail.com
+ *			- Created
+ *			- Logic based on the Path module scripts created by Dan Smith
+ * =====================================
+ */
+Path.FM ( ~Path.Combine ( segments ) )]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+	&lt;CustomFunction id=\"18\" functionArity=\"1\" visible=\"True\" parameters=\"fullPath\" name=\"Path.LastNode\"&gt;
+		&lt;Calculation&gt;
+			&lt;![CDATA[/**
+ * =====================================
+ * Path.LastNode ( fullPath )
+ *
+ * RETURNS:
+ *		Gets the last node of the path. Can be a folder or file name.
+ *
+ * PARAMETERS:
+ *		fullPath | the full filepath in OS, FM, or mixed format
+ *
+ * DEPENDENCIES: 
+ * 		~Path.Normalize
+ *
+ * HISTORY:
+ *		2018-12-27	Joshua Willing	jwillinghalpern@gmail.com
+ *			- normalize the path first in case it's used without first using Path.OS or Path.FM
+ *		2018-12-27	Joshua Willing	jwillinghalpern@gmail.com
+ * =====================================
+ */
+If (
+	IsEmpty ( Trim ( fullPath ) ) ; 
+	\"\" ;
+	Let ([
+		fullPath = ~Path.Normalize ( fullPath );
+//		~sep = If ( Get ( SystemPlatform ) = -2 /* Windows */ ;  \"\\\" ;  \"/\" ) ;
+		~sep = \"/\";
+		~lastSeparator = Position ( fullPath ; ~sep ; Length ( fullPath ) ; -1 ) ;
+		~node = Right ( fullPath ; Length ( fullPath ) - ~lastSeparator ) 
+	];
+		~node
+	)
+)]]&gt;
+&lt;/Calculation&gt;
+	&lt;/CustomFunction&gt;
+&lt;/fmxmlsnippet&gt;"
+
+-- set the clipboard to clip
+set the clipboard to {text:(clip as string)}
+
+%snippet:_fmpastedefault%
+</string>
+			<key>snippetType</key>
+			<integer>2</integer>
+			<key>uuidString</key>
+			<string>ED2A4E5B-E294-4470-9751-798FB1FE1824</string>
+		</dict>
+	</array>
+</dict>
+</plist>
