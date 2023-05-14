@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>groupInfo</key>
+	<dict>
+		<key>expandAfterMode</key>
+		<integer>0</integer>
+		<key>groupName</key>
+		<string>AppleScript</string>
+	</dict>
+	<key>snippetsTE2</key>
+	<array>
+		<dict>
+			<key>abbreviation</key>
+			<string>fnfindandreplace</string>
+			<key>abbreviationMode</key>
+			<integer>0</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T08:27:22Z</date>
+			<key>label</key>
+			<string>AS Find and Replace</string>
+			<key>modificationDate</key>
+			<date>2018-05-02T09:11:12Z</date>
+			<key>plainText</key>
+			<string>on findAndReplaceInText(theText, theSearchString, theReplacementString)	set AppleScript's text item delimiters to theSearchString	set theTextItems to every text item of theText	set AppleScript's text item delimiters to theReplacementString	set theText to theTextItems as string	set AppleScript's text item delimiters to ""	return theTextend findAndReplaceInText</string>
+			<key>snippetType</key>
+			<integer>0</integer>
+			<key>uuidString</key>
+			<string>ACF10FFD-0D51-4133-8015-10A25C09A8C6</string>
+		</dict>
+		<dict>
+			<key>abbreviation</key>
+			<string>_quoteclipAS</string>
+			<key>abbreviationMode</key>
+			<integer>1</integer>
+			<key>creationDate</key>
+			<date>2018-04-30T08:27:22Z</date>
+			<key>label</key>
+			<string>_Quote Clipboard AS</string>
+			<key>modificationDate</key>
+			<date>2019-07-11T03:01:10Z</date>
+			<key>plainText</key>
+			<string>-- PURPOSE:
+--     escape backslashes and double quotes and wrap the whole string in double quotes
+--     use this to make a string AppleScript-friendly for setting variables/clipboard
+%snippet:fnfindandreplace%set str to the clipboardset str to findAndReplaceInText(str, "\\", "\\\\")
+set str to findAndReplaceInText(str, "\"", "\\\"")
+set the clipboard to "\"" &amp; str &amp; "\""</string>
+			<key>snippetType</key>
+			<integer>0</integer>
+			<key>uuidString</key>
+			<string>9F0B1203-097E-4A55-A8F7-BD96C5959AD2</string>
+		</dict>
+	</array>
+</dict>
+</plist>
